@@ -1,0 +1,112 @@
+\documentclass{article}
+\usepackage[nonatbib]{project}
+
+\usepackage[breaklinks=true,letterpaper=true,colorlinks,citecolor=black,bookmarks=false]{hyperref}
+
+\usepackage{amsthm}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+
+\usepackage[sort&compress,numbers]{natbib}
+\usepackage[normalem]{ulem}
+
+% use Times
+\usepackage{times}
+% For figures
+\usepackage{graphicx} % more modern
+%\usepackage{epsfig} % less modern
+%\usepackage{subfig} 
+
+\graphicspath{{../fig/}}
+
+\usepackage{tikz}
+\usepackage{tkz-tab}
+\usepackage{caption} 
+\usepackage{subcaption} 
+\usetikzlibrary{shapes.geometric, arrows}
+\tikzstyle{arrow} = [very thick,->,>=stealth]
+
+\usepackage{cleveref}
+\usepackage{setspace}
+\usepackage{wrapfig}
+%\usepackage[ruled]{algorithm}
+\usepackage{algpseudocode}
+\usepackage[noend,linesnumbered]{algorithm2e}
+
+\usepackage[disable]{todonotes}
+
+
+\title{Analyze and Improve Cross-View Learning with Bayesian Ensemble}
+
+\author{
+	Yuqing Xie \\
+	School of Computer Science\\
+	University of Waterloo\\
+	Waterloo, ON, N2L 3G1 \\
+	\texttt{yuqing.xie@uwaterloo.ca} \\
+	\And
+	Peng Shi\\
+	School of Computer Science\\
+	University of Waterloo\\
+	Waterloo, ON, N2L 3G1 \\
+	\texttt{TODO@uwaterloo.ca} \\
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract} 
+Put here a brief summary of the project: what is it about, what are the related works, what is your execution plan, what do you expect to learn/contribute, and how are you going to evaluate your results. The proposal is expected to be 1 page (reference excluded), so be concise and to the point.
+\end{abstract} 
+
+\section{Introduction}
+In this section you are going to present a brief background and motivation of your project. Why is it interesting/significant? How does it relate to the course?
+
+What is the problem?
+Why is it an important problem?
+Why can't any of the existing techniques effectively tackle this problem?
+What is the intuition behind the technique that you have developed?
+What properties did you analyze/prove about this problem or technique?
+
+\section{Related Works}
+Perform an initial review of relevant literature. Has your problem, or one of similar nature, been considered before? By whom? What are the differences or limitations (if any)? 
+
+Summarize the range of techniques by highlighting their strengths and weaknesses (i.e., the 6-10 papers that you read)
+Tip: this summary should not be a laundry list of techniques with an independent paragraph for each technique
+Suggestion: organize your summary based on desirable properties of the techniques
+Brief description of the existing techniques that you will compare to
+What is the state of the art?
+Any open problem?
+\section{Main Result}
+Brief description of the techniques chosen and why
+Describe the technique that you developed
+%In this section please concisely describe what you are going to achieve in this project. E.g., formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
+
+%For your own sake, you might want to lay out a time line, so that you can keep a good track of your project.
+\section{Experiments}
+Describe the datasets you tested on; justify their relevance
+Compare empirically the techniques for complexity, performance, ease of use, etc.
+Analyze and compare (empirically or theoretically) your new approach to existing approaches
+What is the best technique, in terms of what?
+ Is any technique good enough to declare the problem solved?
+\section{Conclusion}
+Can your new technique effectively tackle the problem?
+What future research do you recommend?
+\newpage
+
+\section*{The report}
+Please summarize all your findings (empirical, algorithmic, theoretical) in a scientific report. I expect there is an introduction section, a background section, a main result section, and a conclusion section. Depending on your project, you may include an experimental section and/or discussion section. Please always give proper citations to prior work or results. Be precise and concise. I expect the report to be less than \textbf{8 pages} (references excluded).
+
+Below are some suggested structures for the report. You do not have to follow any of them. Do what you think is best to summarize your project.
+
+\newpage
+
+\section*{Acknowledgement}
+Thank people who have helped or influenced you in this project.
+
+\nocite{*}
+
+\bibliographystyle{unsrtnat}
+\bibliography{project}
+
+\end{document}
