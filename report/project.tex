@@ -54,6 +54,7 @@
 
 \begin{document}
 \maketitle
+% expect the report to be less than \textbf{8 pages} (references excluded).
 
 \begin{abstract} 
 Put here a brief summary of the project: what is it about, what are the related works, what is your execution plan, what do you expect to learn/contribute, and how are you going to evaluate your results. The proposal is expected to be 1 page (reference excluded), so be concise and to the point.
@@ -68,7 +69,7 @@ Why can't any of the existing techniques effectively tackle this problem?
 What is the intuition behind the technique that you have developed?
 What properties did you analyze/prove about this problem or technique?
 
-\section{Related Works}
+\section{Related Works(background)}
 Perform an initial review of relevant literature. Has your problem, or one of similar nature, been considered before? By whom? What are the differences or limitations (if any)? 
 
 Summarize the range of techniques by highlighting their strengths and weaknesses (i.e., the 6-10 papers that you read)
@@ -77,29 +78,93 @@ Suggestion: organize your summary based on desirable properties of the technique
 Brief description of the existing techniques that you will compare to
 What is the state of the art?
 Any open problem?
+
 \section{Main Result}
 Brief description of the techniques chosen and why
 Describe the technique that you developed
-%In this section please concisely describe what you are going to achieve in this project. E.g., formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
 
-%For your own sake, you might want to lay out a time line, so that you can keep a good track of your project.
+%formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
+
 \section{Experiments}
 Describe the datasets you tested on; justify their relevance
 Compare empirically the techniques for complexity, performance, ease of use, etc.
 Analyze and compare (empirically or theoretically) your new approach to existing approaches
 What is the best technique, in terms of what?
  Is any technique good enough to declare the problem solved?
+ 
 \section{Conclusion}
 Can your new technique effectively tackle the problem?
 What future research do you recommend?
 \newpage
 
-\section*{The report}
-Please summarize all your findings (empirical, algorithmic, theoretical) in a scientific report. I expect there is an introduction section, a background section, a main result section, and a conclusion section. Depending on your project, you may include an experimental section and/or discussion section. Please always give proper citations to prior work or results. Be precise and concise. I expect the report to be less than \textbf{8 pages} (references excluded).
+\section{Proposal script}
 
-Below are some suggested structures for the report. You do not have to follow any of them. Do what you think is best to summarize your project.
+Hi everyone, I am xxx and xxx is my group mate. We are both interested in natural language processing. We wish to understand the mechanism behind current sequential models. We will take cross-view learning as an example in this project. We will analyze and improve cross-view learning using Bayesian ensemble.
 
-\newpage
+First let me introduce you what is cross view training. It is a semi-supervised sequence learning method. This idea first come from vision. We human can construct 3D models from slightly different views from two eyes. Even if we only look through one eye, we can still understand the world in a 3D way. That is because our brain is trained a long time to do that. Kevin Clark first brought this idea to sequence model. He took the Bi-LSTM as the primary view, which is looking through both eyes, and take each directional LSTM as partial view, which is look through only one eye. The idea of cross view training is that enabling partial views the ability to understand the whole sentence and then in tern improve the primary view, since the primary view is made up with partial views.
+
+Now, let’s take a closer look at cross view training. On the labeled data, Kevin followed the traditional bidirectional LSTM fashion. On the unlabeled data, Kevin followed the teacher-student fashion. We take the primary view as the teacher, and take the partial views as students. Through training, partial views will gradually learn to understand the whole sentence. However, one interesting thing here is that  in Kevin Clark’s work, they only use primary view during inference. We think the reason is that partial views are not reliable, and simply ensemble them with primary view may even add burden to the model.
+
+So, here comes our problem. We would like to Investigate the source of the effectiveness of cross-view training method. We will try to answer the following questions: * What does LSTM with CVT learn from the unlabeled data compared with traditional LSTM. * What is learned for different views in CVT.  And further, we wish to improve the cross-view training method based on our investigation.
+
+First thought to investigate the LSTM is to watch on the contribution of each word toward the output. A clear way to do this is to apply the attention mechanism. However, what we want to do here is not to improve the model by introducing extra weights but to just examine the existing model. We follow Jame’s to decomposition. The main idea is to decompose the output gates in LSTM and convert them in to the contribution weights of words towards outputs. We will make a modification of their models since we will be working on different problems and also Bidirectional LSTM.
+
+After acquire the contribution weights, we can apply this to rule based models to visualize the contribution. This is called the automatic rule extraction.
+Next, we will analyze the pattern and summarize the observation into prior knowledge. And then add prior knowledge to Bayesian ensemble to improve the performance of the model.
+
+We will try to first solve the problem on NER dataset, (CoNLL-2003 data, Tjong Kim Sang and De Meulder, 2003)
+Baseline: Traditional LSTM, LSTM in CVT
+
+Possible difficulties
+How to quantify the observations and summarize it into prior knowledge.
+How to integrate the human prior knowledge in Bayesian Ensemble.
+
+Related work - Neural Network Interpretability
+Several work have consider the neural network interpretability and sequence task ensemble.
+
+There are two lines of related work on visualizing LSTMs
+
+First, Hendrik et al. (2016) and Karpathy et al. (2016) analyse the movement of the raw gate activations over a sequence. Karpathy et al. (2016) is able to identify coordinates of c t that correspond to semantically meaningful attributes such as whether the text is in quotes and how far along the sentence a word is.
+
+Another approach that has emerged in Alikaniotis et al. (2016) Denil et al. (2015) Bansal et al. (2016)’s work. They look at the norm of the derivative of the loss function with respect to the embedding parameters for each word in the document. This bridges the gap between high-dimensional cell state and low-dimensional outputs.
+ARE is a LSTM adapted version of this category.
+
+Related work - Sequence task ensemble
+For sequencial task ensemble there also exist several kinds of methods
+
+Rodrigues et al. (2014) proposed a CRF-based model, CRF-MA, that assumes only one annotator is correct for any given label.
+Recently, Nguyen et al. (2017) proposed an approach that outperformed CRFMA, based on hidden Markov models (HMMs),
+Both CRF-MA and HMMcrowd use simpler annotator models that do not capture the effect of sequential dependencies on annotator reliability.
+
+Bayesian approach, which has been shown to be effective for handling uncertainty due to noise in crowdsourced data for non-sequential classification (Kim and Ghahramani, 2012; Simpson et al., 2013; Venanzi et al., 2014; Moreno et al., 2015).
+Yang et al. (2018) adapt a Bayesian neural network so that it can be trained concurrently with an annotator model.
+We will also use a Bayesian approach to aggregate primary view with partial views.
+
+[1] Semi-Supervised Sequence Modeling with Cross-View Training. Kevin Clark, Minh-Thang Luong, Christopher D. Manning, Quoc V. Le arXiv:1809.08370 [cs.CL]
+
+[2] Automatic Rule Extraction from Long Short Term Memory Networks. W. James Murdoch, Arthur Szlam. arXiv:1702.02540 [cs.CL]
+
+[3] Bayesian Ensembles of Crowds and Deep Learners for Sequence Tagging. Edwin Simpson, Iryna Gurevych. arXiv:1811.00780 [cs.CL]
+
+[4] Virtual Adversarial Training: a Regularization Method for Supervised and Semi-supervised Learning. Takeru Miyato, Shin-ichi Maeda, Shin Ishii. arXiv:1704.03976 [stat.ML]
+
+[5] A Co-Regularization Approach to Semi-supervised Learning with Multiple Views. Vikas Sindhwani. Sindhwani2005ACA
+
+[6] Visual Analysis of Hidden State Dynamics in Recurrent Neural Networks. Hendrik Strobelt, Sebastian Gehrmann, Bernd Huber, Hanspeter Pfister and Alexander M. Rush.
+[https://EconPapers.repec.org/RePEc:qsh:wpaper:413341]
+(https://econpapers.repec.org/RePEc:qsh:wpaper:413341)
+
+ [7] Aggregating and Predicting Sequence Labels from Crowd Annotations. An Thanh Nguyen, Byron C. Wallace, Matthew Lease. Published in ACL 2017
+
+[8] Learning Whom to Trust with MACE, Dirk Hovy and Taylor Berg-Kirkpatrick and Ashish Vaswani and Eduard H. Hovy. in proceeding 2013 HLT-NAACL
+
+[9]Bayesian Classifier Combination. Hyun-Chul Kim and Zoubin Ghahramani. In proceedings 2012 AISTATS
+
+[10] End-to-end Sequence Labeling via Bi-directional LSTM-CNNs-CRF. Xuezhe Ma and Eduard H. Hovy, 2016 CoRR
+
+[11] Neural Architectures for Named Entity Recognition, Guillaume Lample and Miguel Ballesteros and Sandeep Subramanian and Kazuya Kawakami and Chris Dyer, In proceedings 2016 HLT-NAACL
+
+[12] How To Grade a Test Without Knowing the Answers - A Bayesian Graphical Model for Adaptive Crowdsourcing and Aptitude Testing, Yoram Bachrach and Thore Graepel and Tom Minka and John Guiver, In proceedings 2012 ICML
 
 \section*{Acknowledgement}
 Thank people who have helped or influenced you in this project.
