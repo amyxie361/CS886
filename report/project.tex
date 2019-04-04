@@ -56,122 +56,151 @@
 \maketitle
 % expect the report to be less than \textbf{8 pages} (references excluded).
 
-\begin{abstract} 
-Put here a brief summary of the project: what is it about, what are the related works, what is your execution plan, what do you expect to learn/contribute, and how are you going to evaluate your results. The proposal is expected to be 1 page (reference excluded), so be concise and to the point.
-\end{abstract} 
+\begin{abstract}
+
+Put here a brief summary of the project: what is it about, what are the related works, what is your execution plan, what do you expect to learn/contribute, and how are you going to evaluate your results. The proposal is expected to be 1 page (reference excluded), so be concise and to the point. 
+
+\end{abstract}
 
 \section{Introduction}
-In this section you are going to present a brief background and motivation of your project. Why is it interesting/significant? How does it relate to the course?
 
-What is the problem?
-Why is it an important problem?
-Why can't any of the existing techniques effectively tackle this problem?
-What is the intuition behind the technique that you have developed?
-What properties did you analyze/prove about this problem or technique?
+Recurrent neural networks(RNN) are now the standard method to deal with natural language. Models using long-short-term-memory(LSTM) perform extremely well on varieties of natural language tasks, ranging from machine translation, question answering to sentence classification and sentence tagging. However, unlike Convolution neural networks for vision tasks, the mechanism behind RNN is less explored and hard to visualize. Without clear understanding of the sequential models, improvements can be hard to made and further improvement will be less directed. 
 
-\section{Related Works(background)}
-Perform an initial review of relevant literature. Has your problem, or one of similar nature, been considered before? By whom? What are the differences or limitations (if any)? 
+TODO:related works summary.
+%Why can't any of the existing techniques effectively tackle this problem?
 
-Summarize the range of techniques by highlighting their strengths and weaknesses (i.e., the 6-10 papers that you read)
-Tip: this summary should not be a laundry list of techniques with an independent paragraph for each technique
-Suggestion: organize your summary based on desirable properties of the techniques
-Brief description of the existing techniques that you will compare to
-What is the state of the art?
-Any open problem?
+Since few theory work has been done to successfully dig deep into sequential models and apply the findings to practice, we proposed a novel method of decomposing Bi-LSTM models and visualize them for further model improvement. We decomposed trained Bi-LSTM models for sequence tagging tasks to understand the contribution of each components in the sentence. %We also improved the final model according to this finding. 
+% take cross-view learning as an example in this project. We will analyze and improve cross-view learning using Bayesian ensemble.
 
-\section{Main Result}
-Brief description of the techniques chosen and why
-Describe the technique that you developed
+First thought to investigate the LSTM is to watch on the contribution of each word toward the output. A clear way to do this is to apply the attention mechanism. However, what we aim to do here is not to improve the model by introducing extra weights but to just examine the existing model. We follow Jame’s to decomposition[TODO]. The main idea is to decompose the output gates in LSTM and convert them in to the contribution weights of words towards outputs. We made modification of their models since we focus on sequence tagging tasks and examined Bi-LSTM.
+
+%Possible difficulties - main contribution
+%How to quantify the observations and summarize it into prior knowledge.
+%How to integrate the human prior knowledge in Bayesian Ensemble.
+
+%CVT
+%First let me introduce you what is cross view training. It is a semi-supervised sequence learning method. This idea first come from vision. We human can construct 3D models from slightly different views from two eyes. Even if we only look through one eye, we can still understand the world in a 3D way. That is because our brain is trained a long time to do that. Kevin Clark first brought this idea to sequence model. He took the Bi-LSTM as the primary view, which is looking through both eyes, and take each directional LSTM as partial view, which is look through only one eye. The idea of cross view training is that enabling partial views the ability to understand the whole sentence and then in tern improve the primary view, since the primary view is made up with partial views.
+%Now, let’s take a closer look at cross view training. On the labeled data, Kevin followed the traditional bidirectional LSTM fashion. On the unlabeled data, Kevin followed the teacher-student fashion. We take the primary view as the teacher, and take the partial views as students. Through training, partial views will gradually learn to understand the whole sentence. However, one interesting thing here is that  in Kevin Clark’s work, they only use primary view during inference. We think the reason is that partial views are not reliable, and simply ensemble them with primary view may even add burden to the model.
+%So, here comes our problem. We would like to Investigate the source of the effectiveness of cross-view training method. We will try to answer the following questions: * What does LSTM with CVT learn from the unlabeled data compared with traditional LSTM. * What is learned for different views in CVT.  And further, we wish to improve the cross-view training method based on our investigation.
+%What properties did you analyze/prove about this problem or technique?
+
+\section{Related Works}
+
+There are mainly two lines of related work on neural network interpretability.
+
+%TODO rewrite and summary.
+
+First, Hendrik et al. (2016) and Karpathy et al. (2016) analyze the movement of the raw gate activations over a sequence.
+Karpathy et al. (2016) is able to identify co-ordinates of $c_t$ that correspond to semantically meaningful attributes such as whether the text is in quotes and how far along the sentence a word is. However, most of the cell co-ordinates are harder to interpret, and in particular, it is often not obvious from their activations which inputs are important for specific outputs.
+
+Another approach that has emerged in the literature Alikaniotis et al. (2016) Denil et al. (2015) Bansal et al. (2016) is for each word in the document, looking at the norm of the derivative of the loss function with respect to the embedding parameters for that word. This bridges the gap between high-dimensional cell state and low-dimensional outputs. These techniques are general- they are applicable to visualizing the importance of sets of input coordinates to output coordinates of any differentiable function. In this work, we describe techniques that are designed around the structure of LSTM’s, and show that they can give better results in that setting.
+
+%Related work - Sequence task ensemble
+%For sequential task ensemble there also exist several kinds of methods
+%Rodrigues et al. (2014) proposed a CRF-based model, CRF-MA, that assumes only one annotator is correct for any given label.
+%Recently, Nguyen et al. (2017) proposed an approach that outperformed CRFMA, based on hidden Markov models (HMMs),
+%Both CRF-MA and HMM crowd use simpler annotator models that do not capture the effect of sequential dependencies on annotator reliability.
+%Bayesian approach, which has been shown to be effective for handling uncertainty due to noise in crowdsourced data for non-sequential classification (Kim and Ghahramani, 2012; Simpson et al., 2013; Venanzi et al., 2014; Moreno et al., 2015).
+%Yang et al. (2018) adapt a Bayesian neural network so that it can be trained concurrently with an annotator model.
+%We will also use a Bayesian approach to aggregate primary view with partial views.
+
+%TODO
+%Summarize the range of techniques by highlighting their strengths and weaknesses  differences or limitations (if any)? 
+%Suggestion: organize your summary based on desirable properties of the techniques
+%What is the state of the art?
+%Any open problem?
+
+\section{Main TODO: change to my own words}
+
+Given a sequence of word embeddings 
+$x_1,...,x_T \in \mathbb{R}^d$, an LSTM processes one word at a time, keeping track of cell and state vectors $(c_1, h_1),...,(c_T, h_T)$ 
+which contain information in the sentence up to word $i$. $h_t$ and  $c_t$ are computed as a function of $x_t, c_{t - 1}$ using the below updates
+\begin{align}
+f_t & = \sigma(W_f x_t + V_f h_{t - 1} + b_f) \\
+i_t & = \sigma(W_i x_t + V_i h_{t - 1} + b_i) \\
+o_t & = \sigma(W_o x_t + V_o h_{t - 1} + b_o) \\
+\tilde{c}_t & = \tanh(W_c x_t + V_c h_{t - 1} + b_c) \\
+c_t & = f_t c_{t - 1} + i_t \tilde{c}_t \\
+h_t & = o_t \odot \tanh(c_t)
+\end{align}
+
+As initial values, we define $c_0=h_0=0$. After processing the full sequence, a probability distribution over $C$ classes is specified by $p$, with 
+\begin{equation}
+p_i = \text{SoftMax}(W h_T) = \frac{e^{W_i h_T}}{\sum_{j = 1} ^ C e^{W_j h_t}} \label{eq:output_prob}
+\end{equation}
+where $W_i$ is the $i$'th row of the matrix $W$
+
+\subsection{Decomposing the Output of a LSTM}
+\label{sec:decomposing}
+We now show that we can decompose the numerator of $p_i$ in Equation  \ref{eq:output_prob} into a product of factors, and interpret those factors as the contribution of individual words to the predicted probability of class $i$. Define 
+\begin{equation}\label{eq:beta} 
+\beta_{i,j} = \exp\left(W_i (o_T \odot (\tanh(c_j)- \tanh(c_{j-1}))\right),
+\end{equation}
+ so that 
+\[\exp( W_ih_T) = \exp\left(\sum_{j=1}^T W_i (o_T \odot (\tanh(c_j) - \tanh(c_{j-1}))\right) = \prod_{j=1}^T \beta_{i,j}.\]
+
+ As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word $j$, so $\beta_{i,j}$ can be interpreted as the multiplicative contribution to $p_{i}$ by word $j$. 
+%\begin{align}
+%p_{t} & = \frac{\exp( Ph_t)_i}{\exp(W_ph_t) + \exp(W_ph_t)_2} \\
+%& = \frac{\exp(\sum_{j=1}^t W_p (o_t \odot (\tanh(c_j) - \tanh(c_{j-1})))_i}{C} \\
+%& = \frac{\prod_{j=1}^t \beta_{j, i}}{C}
+%\end{align}
+\subsection{An Additive Decomposition of the LSTM cell}
+\label{sec:additive}
+We will show below that the $\beta_{i,j}$  capture some notion of the importance of a word to the LSTM's output.   However, these terms fail to account for how the information contributed by word $j$ is affected by the LSTM's forget gates between words $j$ and $T$. Consequently, we empirically found that the importance scores from this approach often yield a considerable amount of false positives. A more nuanced approach is obtained by considering the additive decomposition of $c_T$ in equation \eqref{eq:additive}, where each term $e_j$ can be interpreted as the contribution to the cell state $c_T$ by word $j$. By iterating the equation $c_t = f_tc_{t - 1} + i_t \tilde{c}_t$, we get that
+\begin{equation}
+c_T = \sum_{i=1}^T (\prod_{j=i + 1}^T f_j) i_i \tilde{c}_i = \sum_{i=1}^T e_{i, T} \label{eq:additive}
+\end{equation}
+This suggests a natural definition of an alternative score to the $\beta_{i, j}$, corresponding to augmenting the $c_j$ terms with products of forget gates to reflect the upstream changes made to $c_j$ after initially processing word $j$. 
+\begin{align}
+\label{eq:gamma}
+\exp(W_i h_T) & = \prod_{j=1}^T \exp \left( W_i(o_T \odot (\tanh(\sum_{k = 1}^j e_{k, T}) - \tanh(\sum_{k=1}^{j - 1}e_{k, T})))\right) \\
+& = \prod_{j=1}^T \exp \left( W_i(o_T \odot (\tanh((\prod_{k=j+1}^t f_k) c_j) - \tanh((\prod_{k=j}^t f_k) c_{j - 1}))) \right) \\
+& = \prod_{j=1}^T \gamma_{i,j}
+\end{align}
+\section{Phrase Extraction for Document Classification}
+We now introduce a technique for using our variable importance scores to extract phrases from a trained LSTM. To do so, we search for phrases which consistently provide a large contribution to the prediction of a particular class relative to other classes. The utility of these patterns is validated by using them as input for a rules based classifier. For simplicity, we focus on the binary classification case.
+\subsection{Phrase Extraction}
+\label{sec:phrase_extraction}
+A phrase can be reasonably described as predictive if, whenever it occurs, it causes a document to both be labelled as a particular class, and not be labelled as any other. As our importance scores introduced above correspond to the contribution of particular words to class predictions, they can be used to score potential patterns by looking at a pattern's average contribution to the prediction of a given class relative to other classes. More precisely, given a collection of $D$ documents $\{\{x_{i,j}\}_{i = 1}^ {N_d} \}_{j=1}^D$, for a given phrase $w_1,...,w_k$ we can compute scores $S_1, S_2$ for classes 1 and 2, as well as a combined score $S$ and class $C$ as
+\begin{align}
+S_1(w_1,...,w_k) & =  \frac{\text{Average}_{j,b}\left\lbrace \prod_{l=1}^k \beta_{1, b + l, j} | x_{b + i, j} = w_i, i = 1,...,k  \right\rbrace}{\text{Average}_{j,b}\left\lbrace \prod_{l=1}^k \beta_{2, b + l, j} | x_{b + i, j} = w_i, i = 1,...,k  \right\rbrace} \\
+S_2(w_1,..,w_k) & = \frac{1}{S_1(w_1,...,w_k)} \\
+S(w_1,...,w_k) & = \max_i(S_i(w_1,...,w_k))\\
+C(w_1,...,w_k) & = \text{argmax}_i(S_i(w_1,...,w_k))
+\end{align}
+where $\beta_{i, j, k}$ denotes $\beta_{i, j}$ applied to document $k$. 
+
+The numerator of $S_1$ denotes the average contribution of the phrase to the prediction of class 1 across all occurrences of the phrase. The denominator denotes the same statistic, but for class 2. Thus, if $S_1$ is high, then $w_1,...,w_k$ is a strong signal for class 1, and likewise for $S_2$. We propose to use $S$ as a score function in order to search for high scoring, representative, phrases which provide insight into the trained LSTM, and $C$ to denote the class corresponding to a phrase.
+
+In practice, the number of phrases is too large to feasibly compute the score of them all. Thus, we approximate a brute force search through a two step procedure. First, we construct a list of candidate phrases by searching for strings of consecutive words $j$ with importance scores $\beta_{i,j} > c$ for any $i$ and some threshold $c$; in the experiments below we use $c=1.1$. Then, we score and rank the set of candidate phrases, which is much smaller than the set of all phrases. 
+\subsection{Rules based classifier}
+The extracted patterns from Section \ref{sec:phrase_extraction} can be used to construct a simple, rules-based classifier which approximates the output of the original LSTM. Given a document and a list of patterns sorted by descending score given by $S$, the classifier sequentially searches for each pattern within the document using simple string matching. Once it finds a pattern, the classifier returns the associated class given by $C$, ignoring the lower ranked patterns. The resulting classifier is interpretable,  and despite its simplicity,  retains much of the accuracy of the LSTM used to build it.
+
 
 %formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
 
-\section{Experiments}
-Describe the datasets you tested on; justify their relevance
-Compare empirically the techniques for complexity, performance, ease of use, etc.
-Analyze and compare (empirically or theoretically) your new approach to existing approaches
-What is the best technique, in terms of what?
- Is any technique good enough to declare the problem solved?
+\section{Experiments TODO: add details}
+
+We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
+
+%Describe the datasets you tested on; justify their relevance
+%Compare empirically the techniques for complexity, performance, ease of use, etc.
+%Analyze and compare (empirically or theoretically) your new approach to existing approaches
+%What is the best technique, in terms of what?
+%Is any technique good enough to declare the problem solved?
  
 \section{Conclusion}
-Can your new technique effectively tackle the problem?
-What future research do you recommend?
-\newpage
+%Can your new technique effectively tackle the problem?
+%What future research do you recommend?
 
-\section{Proposal script}
-
-Hi everyone, I am xxx and xxx is my group mate. We are both interested in natural language processing. We wish to understand the mechanism behind current sequential models. We will take cross-view learning as an example in this project. We will analyze and improve cross-view learning using Bayesian ensemble.
-
-First let me introduce you what is cross view training. It is a semi-supervised sequence learning method. This idea first come from vision. We human can construct 3D models from slightly different views from two eyes. Even if we only look through one eye, we can still understand the world in a 3D way. That is because our brain is trained a long time to do that. Kevin Clark first brought this idea to sequence model. He took the Bi-LSTM as the primary view, which is looking through both eyes, and take each directional LSTM as partial view, which is look through only one eye. The idea of cross view training is that enabling partial views the ability to understand the whole sentence and then in tern improve the primary view, since the primary view is made up with partial views.
-
-Now, let’s take a closer look at cross view training. On the labeled data, Kevin followed the traditional bidirectional LSTM fashion. On the unlabeled data, Kevin followed the teacher-student fashion. We take the primary view as the teacher, and take the partial views as students. Through training, partial views will gradually learn to understand the whole sentence. However, one interesting thing here is that  in Kevin Clark’s work, they only use primary view during inference. We think the reason is that partial views are not reliable, and simply ensemble them with primary view may even add burden to the model.
-
-So, here comes our problem. We would like to Investigate the source of the effectiveness of cross-view training method. We will try to answer the following questions: * What does LSTM with CVT learn from the unlabeled data compared with traditional LSTM. * What is learned for different views in CVT.  And further, we wish to improve the cross-view training method based on our investigation.
-
-First thought to investigate the LSTM is to watch on the contribution of each word toward the output. A clear way to do this is to apply the attention mechanism. However, what we want to do here is not to improve the model by introducing extra weights but to just examine the existing model. We follow Jame’s to decomposition. The main idea is to decompose the output gates in LSTM and convert them in to the contribution weights of words towards outputs. We will make a modification of their models since we will be working on different problems and also Bidirectional LSTM.
-
-After acquire the contribution weights, we can apply this to rule based models to visualize the contribution. This is called the automatic rule extraction.
-Next, we will analyze the pattern and summarize the observation into prior knowledge. And then add prior knowledge to Bayesian ensemble to improve the performance of the model.
-
-We will try to first solve the problem on NER dataset, (CoNLL-2003 data, Tjong Kim Sang and De Meulder, 2003)
-Baseline: Traditional LSTM, LSTM in CVT
-
-Possible difficulties
-How to quantify the observations and summarize it into prior knowledge.
-How to integrate the human prior knowledge in Bayesian Ensemble.
-
-Related work - Neural Network Interpretability
-Several work have consider the neural network interpretability and sequence task ensemble.
-
-There are two lines of related work on visualizing LSTMs
-
-First, Hendrik et al. (2016) and Karpathy et al. (2016) analyse the movement of the raw gate activations over a sequence. Karpathy et al. (2016) is able to identify coordinates of c t that correspond to semantically meaningful attributes such as whether the text is in quotes and how far along the sentence a word is.
-
-Another approach that has emerged in Alikaniotis et al. (2016) Denil et al. (2015) Bansal et al. (2016)’s work. They look at the norm of the derivative of the loss function with respect to the embedding parameters for each word in the document. This bridges the gap between high-dimensional cell state and low-dimensional outputs.
-ARE is a LSTM adapted version of this category.
-
-Related work - Sequence task ensemble
-For sequencial task ensemble there also exist several kinds of methods
-
-Rodrigues et al. (2014) proposed a CRF-based model, CRF-MA, that assumes only one annotator is correct for any given label.
-Recently, Nguyen et al. (2017) proposed an approach that outperformed CRFMA, based on hidden Markov models (HMMs),
-Both CRF-MA and HMMcrowd use simpler annotator models that do not capture the effect of sequential dependencies on annotator reliability.
-
-Bayesian approach, which has been shown to be effective for handling uncertainty due to noise in crowdsourced data for non-sequential classification (Kim and Ghahramani, 2012; Simpson et al., 2013; Venanzi et al., 2014; Moreno et al., 2015).
-Yang et al. (2018) adapt a Bayesian neural network so that it can be trained concurrently with an annotator model.
-We will also use a Bayesian approach to aggregate primary view with partial views.
-
-[1] Semi-Supervised Sequence Modeling with Cross-View Training. Kevin Clark, Minh-Thang Luong, Christopher D. Manning, Quoc V. Le arXiv:1809.08370 [cs.CL]
-
-[2] Automatic Rule Extraction from Long Short Term Memory Networks. W. James Murdoch, Arthur Szlam. arXiv:1702.02540 [cs.CL]
-
-[3] Bayesian Ensembles of Crowds and Deep Learners for Sequence Tagging. Edwin Simpson, Iryna Gurevych. arXiv:1811.00780 [cs.CL]
-
-[4] Virtual Adversarial Training: a Regularization Method for Supervised and Semi-supervised Learning. Takeru Miyato, Shin-ichi Maeda, Shin Ishii. arXiv:1704.03976 [stat.ML]
-
-[5] A Co-Regularization Approach to Semi-supervised Learning with Multiple Views. Vikas Sindhwani. Sindhwani2005ACA
-
-[6] Visual Analysis of Hidden State Dynamics in Recurrent Neural Networks. Hendrik Strobelt, Sebastian Gehrmann, Bernd Huber, Hanspeter Pfister and Alexander M. Rush.
-[https://EconPapers.repec.org/RePEc:qsh:wpaper:413341]
-(https://econpapers.repec.org/RePEc:qsh:wpaper:413341)
-
- [7] Aggregating and Predicting Sequence Labels from Crowd Annotations. An Thanh Nguyen, Byron C. Wallace, Matthew Lease. Published in ACL 2017
-
-[8] Learning Whom to Trust with MACE, Dirk Hovy and Taylor Berg-Kirkpatrick and Ashish Vaswani and Eduard H. Hovy. in proceeding 2013 HLT-NAACL
-
-[9]Bayesian Classifier Combination. Hyun-Chul Kim and Zoubin Ghahramani. In proceedings 2012 AISTATS
-
-[10] End-to-end Sequence Labeling via Bi-directional LSTM-CNNs-CRF. Xuezhe Ma and Eduard H. Hovy, 2016 CoRR
-
-[11] Neural Architectures for Named Entity Recognition, Guillaume Lample and Miguel Ballesteros and Sandeep Subramanian and Kazuya Kawakami and Chris Dyer, In proceedings 2016 HLT-NAACL
-
-[12] How To Grade a Test Without Knowing the Answers - A Bayesian Graphical Model for Adaptive Crowdsourcing and Aptitude Testing, Yoram Bachrach and Thore Graepel and Tom Minka and John Guiver, In proceedings 2012 ICML
-
-\section*{Acknowledgement}
-Thank people who have helped or influenced you in this project.
+%\section*{Acknowledgement}
+%Thank people who have helped or influenced you in this project.
 
 \nocite{*}
 
 \bibliographystyle{unsrtnat}
+
 \bibliography{project}
 
 \end{document}
