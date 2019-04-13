@@ -66,13 +66,14 @@ Put here a brief summary of the project: what is it about, what are the related 
 
 Recurrent neural networks(RNN) are now the standard method to deal with natural language. Models using long-short-term-memory(LSTM) perform extremely well on varieties of natural language tasks, ranging from machine translation, question answering to sentence classification and sentence tagging. However, unlike Convolution neural networks for vision tasks, the mechanism behind RNN is less explored and hard to visualize. Without clear understanding of the sequential models, improvements can be hard to made and further improvement will be less directed. 
 
+Several previous work has been done to try to visualize LSTM. However, no significant findings has been made to help understand the contributions of each words. 
 TODO:related works summary.
 %Why can't any of the existing techniques effectively tackle this problem?
 
 Since few theory work has been done to successfully dig deep into sequential models and apply the findings to practice, we proposed a novel method of decomposing Bi-LSTM models and visualize them for further model improvement. We decomposed trained Bi-LSTM models for sequence tagging tasks to understand the contribution of each components in the sentence. %We also improved the final model according to this finding. 
 % take cross-view learning as an example in this project. We will analyze and improve cross-view learning using Bayesian ensemble.
 
-First thought to investigate the LSTM is to watch on the contribution of each word toward the output. A clear way to do this is to apply the attention mechanism. However, what we aim to do here is not to improve the model by introducing extra weights but to just examine the existing model. We follow Jame’s to decomposition[TODO]. The main idea is to decompose the output gates in LSTM and convert them in to the contribution weights of words towards outputs. We made modification of their models since we focus on sequence tagging tasks and examined Bi-LSTM.
+First thought to investigate the LSTM is to watch on the contribution of each word toward the output. A clear way to do this is to apply the attention mechanism. However, what we aim to do here is not to improve the model by introducing extra weights but to just examine the existing model. We follow Jame’s to decomposition[TODO]. The main idea is to decompose the output gates in LSTM and convert them in to the contribution weights of words towards outputs. Their work focus on the sentence classification tasks -- sentiment classification. This is relative simple task and needs less understanding of the sentence structure. Contributions of each word is relatively clear according to their meaning, which can be easily represented by current word embeddings. We follow their method  made modification of their models since we focus on sequence tagging tasks and examined Bi-LSTM.
 
 %Possible difficulties - main contribution
 %How to quantify the observations and summarize it into prior knowledge.
@@ -110,11 +111,23 @@ Another approach that has emerged in the literature Alikaniotis et al. (2016) De
 %What is the state of the art?
 %Any open problem?
 
-\section{Main TODO: change to my own words}
+\section{Main}
 
-Given a sequence of word embeddings 
-$x_1,...,x_T \in \mathbb{R}^d$, an LSTM processes one word at a time, keeping track of cell and state vectors $(c_1, h_1),...,(c_T, h_T)$ 
-which contain information in the sentence up to word $i$. $h_t$ and  $c_t$ are computed as a function of $x_t, c_{t - 1}$ using the below updates
+To understand the mechanism behind current sequential models, we follow [TODO Ian Tenney]'s ``edge probing'' framework to construct an architectures across tasks. 
+
+\subsection{Notations}
+Formally, we represent a sentence as a list of tokens $T = [t_1, t_2, ... , t_n]$, where $n$ represents the length of the sentence, and the label of each token to be $L = [l_1, l_2, ... , l_n]$. Given a sequence of tokens, we embed the tokens into a high dimension vectors. Thus, a sentence can be represented as $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d, \forall 1 \leq i \leq n$, where $d$ is the embedding size.
+
+\subsection{Tasks}
+We focus on the named entity recognition task. This is to tag each word its category in terms of entity, that is does the word refer to a person, a location, an organization, etc. Usually the system needs to tag for each token their category alone with whether it is the start, inner or end part of this entity. To make future analysis easier, we simplify the task to be a binary classification task. That is to say, we classify each token to be either entity or non-entity.
+
+\subsection{Models}
+
+We implement several models to compare the contribution of both embedding information and contextual information to the final prediction.
+
+\textbf{Uni-directional LSTM}
+
+We follow the traditional LSTM mechanism to examine the sequential language models. Given a sequence of word embeddings, $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d$, an  uni-directional LSTM processes one word at a time, keeping track of cellgates $C = [c_1, c_2, ... , c_n]$ and hidden states $H = [h_1, h_2, ... , h_n]$ containing information in the sentence up to word $i$. $h_t$ and $c_t$ are computed as a function of $e_t, c_{t-1}$ using the following updates.
 \begin{align}
 f_t & = \sigma(W_f x_t + V_f h_{t - 1} + b_f) \\
 i_t & = \sigma(W_i x_t + V_i h_{t - 1} + b_i) \\
@@ -124,11 +137,32 @@ c_t & = f_t c_{t - 1} + i_t \tilde{c}_t \\
 h_t & = o_t \odot \tanh(c_t)
 \end{align}
 
-As initial values, we define $c_0=h_0=0$. After processing the full sequence, a probability distribution over $C$ classes is specified by $p$, with 
-\begin{equation}
-p_i = \text{SoftMax}(W h_T) = \frac{e^{W_i h_T}}{\sum_{j = 1} ^ C e^{W_j h_t}} \label{eq:output_prob}
-\end{equation}
-where $W_i$ is the $i$'th row of the matrix $W$
+As initial values, we define $c_0=h_0=0$. 
+After updating the current token $t$ information, a probability distribution over $C$ classes is specified by $p_{t, c} = \text{SoftMax}(W h_t) = \frac{e^{W_{:t} h_t}}{\sum_{c = 1} ^ C e^{W_{:c} h_t}}$, where $W_{:i}$ is the $i$'th row of the matrix $W$.
+
+This is the forward directional LSTM. We also consider the backward directional LSTM. The updates will be as follow:
+\begin{align}
+f_t & = \sigma(W_f x_t + V_f h_{t + 1} + b_f) \\
+i_t & = \sigma(W_i x_t + V_i h_{t + 1} + b_i) \\
+o_t & = \sigma(W_o x_t + V_o h_{t + 1} + b_o) \\
+\tilde{c}_t & = \tanh(W_c x_t + V_c h_{t + 1} + b_c) \\
+c_t & = f_t c_{t _ 1} + i_t \tilde{c}_t \\
+h_t & = o_t \odot \tanh(c_t)
+\end{align}
+As initial values, we define $c_n=h_n=0$. The only difference is that we have to update from the end of the sentence.
+
+\textbf{Bi-directional LSTM}
+
+According to previous researched[TODO], bi-directional LSTM will have better performance. So we also include a bi-directional implementation. The encoding is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. The probability distribution over $C$ classes is specified by $p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:t} [h_t^{fw}, h_t^{bw}]}}{\sum_{c = 1} ^ C e^{W_{:c} [h_t^{fw}, h_t^{bw}]}}$
+
+\textbf{MLP}
+
+To examine what information has been learnt by LSTM from the context, we also implemented a 2-layer MLP network to tag the tokens only according to the embeddings. The network can be represented as: $f(e_i) = \sigma(W_2 \sigma(W_1 e_i + b_1) + b_2)$, where $W_i$ and $b_i$ are the  weights and bias of $i$th layer. In this work we use ReLU as our activation function $\sigma$. We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward uni-directional LSTM and the bi-directional LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f(e_t))$.
+
+\subsection{Decomposition}
+
+
+
 
 \subsection{Decomposing the Output of a LSTM}
 \label{sec:decomposing}
