@@ -33,7 +33,20 @@
 \usepackage{algpseudocode}
 \usepackage[noend,linesnumbered]{algorithm2e}
 
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{url}
+\usepackage{float}
+
 \usepackage[disable]{todonotes}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
 
 
 \title{Analyze and Improve Cross-View Learning with Bayesian Ensemble}
@@ -214,9 +227,90 @@ The extracted patterns from Section \ref{sec:phrase_extraction} can be used to c
 
 %formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
 
-\section{Experiments TODO: add details}
+\section{Experimental Setup}
 
-We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
+We conduct extensive experiments to answer the question: What do the Bi-LSTM learn? 
+
+
+\subsection{Dataset} Our experiments are conducted based on OntoNotes 5 English dataset~\cite{weischedel2012ontonotes}, focusing on Entity Detection task. The Entity Detection task is usually formulated as a sequence labeling task: labels are assigned to each token. Different tagging scheme can be adopted, such as \textit{BIO}, \textit{BIOES}, etc. For simplification, in this work, we use \textit{IO} scheme: if the token is a part of entity, it will be annotated as \textbf{I}; otherwise, it will be annotated as \textbf{O}. One special case that this tagging scheme can not handle is that two entity appear consecutively in one sentence, because there is not boundary label such \textbf{B}~(begin of entity). So in our experiments, we remove the sentences with consecutive entities for further experiments. The performance is evaluated by Precision, Recall and F1 scores.
+
+\subsection{Hyper-parameters}
+
+
+\subsection{Setup}
+
+To investigate the problem: What does the Bi-LSTM learn, we decompose it into three small problems:
+
+\begin{itemize}
+	\item Does Bi-LSTM perform significantly better than Uni-directional LSTM and local models such as MLP? In what cases, Bi-LSTM is better than uni-directional LSTM and local models? And in what cases, Uni-directional LSTM and local models can also work well?
+	\item How to verify that the Bi-LSTM model learn to do prediction based on contextual information?
+	\item Why do Uni-directional LSTM and local model also work in some cases? 
+\end{itemize}
+
+To answer first question, we conduct the experiments with Bi-LSTM, Uni-directional LSTM model. The embedding is initialized with GloVe pretraining embeddings~\cite{pennington2014glove}. To investigate what kind of information gain provided by the LSTM, we also conduct experiments with MLP. We adopt the fine-tuned embeddings in LSTM and fix them during the training of MLP model. This is known as probing technique. 
+
+To answer the second question, we use the LSTM decomposition technique to further investigate the contribution distribution for the token level prediction. The decomposition is conducted for Bi-LSTM and Uni-directional LSTM. 
+
+To answer the third question, we leverage visualization techniques such as t-SNE~\cite{maaten2008visualizing}, to visualize the hidden vectors.
+
+\section{Results}
+
+We demonstrate our results regarding different questions we are trying to answer. 
+
+
+\subsection{Question 1}
+
+\begin{table}[t]
+	\centering
+	\begin{tabular}{l@{\qquad}ccc}
+		\toprule
+		\textbf{Model}         & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\ \midrule
+		Bi-LSTM &  84.82 & 83.60  & 84.20 \\
+		Uni-LSTM & 72.47 & 73.88 & 73.17 \\
+		MLP(bi) & 54.97 & 75.65 & 63.67 \\ 
+		MLP(uni) & 60.80 & 61.75 &  61.27 \\ 
+		\bottomrule
+	\end{tabular}
+	\vspace{3mm}
+	\caption{Entity Detection performance on OntoNotes 5 English Dataset Test set.}
+	\label{res:ner}
+\end{table}
+
+
+\noindent \textbf{Bi-LSTM v.s. Uni-LSTM}
+
+
+The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, and further categorize them into \red{n} types, as shown in \red{Table}.
+
+
+
+\noindent \textbf{Bi-LSTM v.s. MLP(bi)}
+
+Further comparing the results of Bi-LSTM and MLP(bi), we can better understand the gains brought by the Bi-LSTM contextual encoding layer. Even leveraging the embeddings learned in Bi-LSTM model, the fine-tune MLP model still falls far behind the Bi-LSTM model. This comparison proves that the Bi-LSTM indeed empowers the entity detection ability. Further error analysis is shown in \red{Table}.
+
+
+\noindent \textbf{Uni-LSTM v.s. MLP(uni)}
+
+
+
+
+
+\subsection{Question 2}
+
+In question 1, we have empirically shown that the LSTM model could perform significantly better than local model, then we also want to show this in more theoretically way. With LSTM decomposition, we find that the LSTM can correct several errors made by local model such as MLP. 
+
+
+
+
+
+\subsection{Question 3}
+\noindent \textbf{Question 3}
+
+
+
+
+
+% We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
 
 %Describe the datasets you tested on; justify their relevance
 %Compare empirically the techniques for complexity, performance, ease of use, etc.
