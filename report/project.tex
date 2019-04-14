@@ -6,6 +6,7 @@
 \usepackage{amsthm}
 \usepackage{amsmath,amssymb}
 \usepackage{enumitem}
+\usepackage{comment}
 
 \usepackage[sort&compress,numbers]{natbib}
 \usepackage[normalem]{ulem}
@@ -126,70 +127,110 @@ Another approach that has emerged in the literature Alikaniotis et al. (2016) De
 
 \section{Main}
 
-To understand the mechanism behind current sequential models, we follow [TODO Ian Tenney]'s ``edge probing'' framework to construct an architectures across tasks. 
+To understand the mechanism behind current sequential models, we follow [TODO Ian Tenney]'s ``edge probing'' framework to construct an architectures across tasks. Unlike [Tenney] focusing on sequence classification tasks, we focus on sequence tagging problem. That is to say, given a sentence, we have to give each token a label based on the whole sentence.
 
 \subsection{Notations}
-Formally, we represent a sentence as a list of tokens $T = [t_1, t_2, ... , t_n]$, where $n$ represents the length of the sentence, and the label of each token to be $L = [l_1, l_2, ... , l_n]$. Given a sequence of tokens, we embed the tokens into a high dimension vectors. Thus, a sentence can be represented as $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d, \forall 1 \leq i \leq n$, where $d$ is the embedding size.
+Formally, we represent a sentence as a list of tokens $T = [t_1, t_2, ... , t_n]$, where $n$ represents the length of the sentence, and the label of each token to be $L = [l_1, l_2, ... , l_n]$. Given a sequence of tokens, we embed the tokens into a high dimension vectors. Thus, a sentence can be represented as $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d, \forall 1 \leq i \leq n$, where $d$ is the embedding size. Then we pass this embedded sentence into models.
 
-\subsection{Tasks}
-We focus on the named entity recognition task. This is to tag each word its category in terms of entity, that is does the word refer to a person, a location, an organization, etc. Usually the system needs to tag for each token their category alone with whether it is the start, inner or end part of this entity. To make future analysis easier, we simplify the task to be a binary classification task. That is to say, we classify each token to be either entity or non-entity.
+%\red{We focus on the named entity recognition task. This is to tag each word its category in terms of entity, that is does the word refer to a person, a location, an organization, etc. Usually the system needs to tag for each token their category alone with whether it is the start, inner or end part of this entity. To make future analysis easier, we simplify the task to be a binary classification task. That is to say, we classify each token to be either entity or non-entity.} 
+%states twice ?
 
 \subsection{Models}
 
-We implement several models to compare the contribution of both embedding information and contextual information to the final prediction.
+We implement several models to compare the contribution of both embedding information and contextual information to the final prediction. 
+
+\ 
 
 \textbf{Uni-directional LSTM}
 
-We follow the traditional LSTM mechanism to examine the sequential language models. Given a sequence of word embeddings, $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d$, an  uni-directional LSTM processes one word at a time, keeping track of cellgates $C = [c_1, c_2, ... , c_n]$ and hidden states $H = [h_1, h_2, ... , h_n]$ containing information in the sentence up to word $i$. $h_t$ and $c_t$ are computed as a function of $e_t, c_{t-1}$ using the following updates.
-\begin{align}
+We follow the traditional LSTM mechanism to construct a model for sequence tagging task. Given a sequence of word embeddings, $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d$, an uni-directional LSTM processes one word at a time, keeping track of cell-gates $C = [c_1, c_2, ... , c_n]$ and hidden states $H = [h_1, h_2, ... , h_n]$. After processing each token, the hidden state of current token is then passed through a fully-connected layer to form the probability distribution over classes. After a softmax activation function and argmax, the model will predict a label across classes.
+
+In detail, each uni-LSTM cell computes $h_t$ and $c_t$ as a function of $e_t, c_{t-1}$ using the following updates. 
+\begin{align}\label{eq:f1}
 f_t & = \sigma(W_f x_t + V_f h_{t - 1} + b_f) \\
 i_t & = \sigma(W_i x_t + V_i h_{t - 1} + b_i) \\
 o_t & = \sigma(W_o x_t + V_o h_{t - 1} + b_o) \\
 \tilde{c}_t & = \tanh(W_c x_t + V_c h_{t - 1} + b_c) \\
-c_t & = f_t c_{t - 1} + i_t \tilde{c}_t \\
+c_t & = f_t \odot c_{t - 1} + i_t \odot \tilde{c}_t \\
 h_t & = o_t \odot \tanh(c_t)
 \end{align}
 
 As initial values, we define $c_0=h_0=0$. 
-After updating the current token $t$ information, a probability distribution over $C$ classes is specified by $p_{t, c} = \text{SoftMax}(W h_t) = \frac{e^{W_{:t} h_t}}{\sum_{c = 1} ^ C e^{W_{:c} h_t}}$, where $W_{:i}$ is the $i$'th row of the matrix $W$.
+Then the probability distribution for the $t$ th token for the $c$ th class is specified by $p_{t, c} = \text{SoftMax}(W h_t) = \frac{e^{W_{:c} h_t}}{\sum_{j = 1} ^ C e^{W_{:j} h_t}}$, where $W_{:j}$ is the $i$ th row of the matrix $W$.
 
-This is the forward directional LSTM. We also consider the backward directional LSTM. The updates will be as follow:
-\begin{align}
-f_t & = \sigma(W_f x_t + V_f h_{t + 1} + b_f) \\
-i_t & = \sigma(W_i x_t + V_i h_{t + 1} + b_i) \\
-o_t & = \sigma(W_o x_t + V_o h_{t + 1} + b_o) \\
-\tilde{c}_t & = \tanh(W_c x_t + V_c h_{t + 1} + b_c) \\
-c_t & = f_t c_{t _ 1} + i_t \tilde{c}_t \\
-h_t & = o_t \odot \tanh(c_t)
-\end{align}
-As initial values, we define $c_n=h_n=0$. The only difference is that we have to update from the end of the sentence.
+This is the forward directional LSTM. In this case, the information is passed from the beginning of the sentence to the end. We also consider the backward directional LSTM for later comparison. The only difference will be the update direction and the initial value. The initial values are assigned to $c_n=h_n=0$. And the information is passed from the end of the sentence to the beginning, which means we update the $t$ th token using the $t+1$ th token instead of the $t-1$ th as in the forward version.
+%\begin{align}
+%f_t & = \sigma(W_f x_t + V_f h_{t + 1} + b_f) \\
+%i_t & = \sigma(W_i x_t + V_i h_{t + 1} + b_i) \\
+%o_t & = \sigma(W_o x_t + V_o h_{t + 1} + b_o) \\
+%\tilde{c}_t & = \tanh(W_c x_t + V_c h_{t + 1} + b_c) \\
+%c_t & = f_t \odot c_{t _ 1} + i_t \odot \tilde{c}_t \\
+%h_t & = o_t \odot \tanh(c_t)
+%\end{align}
+
+\ 
 
 \textbf{Bi-directional LSTM}
 
-According to previous researched[TODO], bi-directional LSTM will have better performance. So we also include a bi-directional implementation. The encoding is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. The probability distribution over $C$ classes is specified by $p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:t} [h_t^{fw}, h_t^{bw}]}}{\sum_{c = 1} ^ C e^{W_{:c} [h_t^{fw}, h_t^{bw}]}}$, in which $[h_t^{fw}, h_t^{bw}]$ represents the concatenated matrix of $h_t^{fw}$ and $h_t^{bw}$.
+Uni-directional LSTM networks suffer from only seeing information from one side of the sentence. So we also include a bi-directional LSTM to examine the information learnt from both sides. The encoding process is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. We also demote the concatenated matrix of $*_t^{fw}$ and $*_t^{bw}$ as $[*_t^{fw}, *_t^{bw}]$. After concatenate the forward and backward gates together, using $[*_t^{bw}, *_t^{fw}]$ to replace $*_t$ in formulas of \ref{eq:f1}, we can represent the update formulas in a same form. 
+
+Also probability distribution for the $t$ th token for the $c$ th class is specified by $p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:c} [h_t^{fw}, h_t^{bw}]}}{\sum_{j = 1} ^ C e^{W_{:j} [h_t^{fw}, h_t^{bw}]}}$,.
+
+\ 
 
 \textbf{MLP}
 
-To examine what information has been learnt by LSTM from the context, we also implemented a 2-layer MLP network to tag the tokens only according to the embeddings. The network can be represented as: $f(e_i) = \sigma(W_2 \sigma(W_1 e_i + b_1) + b_2)$, where $W_i$ and $b_i$ are the  weights and bias of $i$th layer. In this work we use ReLU as our activation function $\sigma$. We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward uni-directional LSTM and the bi-directional LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f(e_t))$.
+To examine what information has been learnt by LSTM from the context and what information can be directly learned from the word embedding, we also implemented a 2-layer MLP network to tag the tokens only according to the embeddings. Each MLP layer can be represented as follow:
+The input of the $i$ th layer is represented as $x_i$, then the $i$ th layer is $f_i(x_i) = \sigma(W_i x_i + b_i)$, where $W_i$ and $b_i$ are the weights and bias of the $i$ th layer. In this work we use ReLU as our activation function $\sigma$. Then the output of the $i$ th layer $f_i(x_i)$ is then feed into the next layer as input. That is to say $x_{i+1} = f_i(x_i)$. In this implementation, we use a 2-hidden-layer MLP.
+
+We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward uni-directional LSTM and the bi-directional LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f_3(e_t))$.% explain more?
 
 \subsection{Decomposition}
 
-We now show that we can decompose the numerator of $p_{t, c}$ into a product of factors, and interpret those factors as the contribution of individual words of the predicted probability of class $i$. 
-Define 
-\begin{equation}\label{eq:beta} 
-\beta_{t,c, j} = \exp\left(W_{:t} (o_T \odot (\tanh(c_j)- \tanh(c_{j-1}))\right),
+\textbf{Uni-LSTM}
+
+We now show that we can decompose the numerator of $p_{t, c}$ into a product of factors, and interpret those factors as the contribution of individual words of the predicted probability of class $c$ for uni-LSTM. Also taking the forward direction as an example, define 
+\begin{equation}\label{eq:uni-beta} 
+\beta_{t, c, j} = \exp\left(W_{:c} (o_t \odot (\tanh(c_j)- \tanh(c_{j-1}))\right),
 \end{equation}
 so that 
-\[\exp( W_ih_T) = \exp\left(\sum_{j=1}^T W_i (o_T \odot (\tanh(c_j) - \tanh(c_{j-1}))\right) = \prod_{j=1}^T \beta_{i,j}.\]
+\[\exp( W_{:c} h_t) = \exp\left(\sum_{j=1}^t W_{:c} (o_t \odot (\tanh(c_j) - \tanh(c_{j-1}))\right) = \prod_{j=1}^t \beta_{t, c, j}.\]
 
-As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word $j$, so $\beta_{i,j}$ can be interpreted as the multiplicative contribution to $p_{i}$ by word $j$. 
-\begin{align}
-p_{t} & = \frac{\exp( Ph_t)_i}{\exp(W_ph_t) + \exp(W_ph_t)_2} \\
-& = \frac{\exp(\sum_{j=1}^t W_p (o_t \odot (\tanh(c_j) - \tanh(c_{j-1})))_i}{C} \\
-& = \frac{\prod_{j=1}^t \beta_{j, i}}{C}
+As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word $j$, so $\beta_{t, c, j}$ can be interpreted as the multiplicative contribution to $p_{t, c}$ by word $j$. 
+
+This is a direct extension of [TODO]'s work, in which we expand their method to suit sequence tagging tasks.
+The backward direction will just be the same.
+
+\textbf{Bi-LSTM}
+
+For the bi-directional LSTM decomposition, we can simply de-concatenate the gate states and compute the contribution of each direction as in the uni-direction version. Then each token's probability distribution can be taken as a combination of both direction. That is to say, the probability can be interpreted as follow:
+\begin{align}\label{eq:bi-beta} 
+\beta_{t, c, j} = \exp(&W_{:c} [h_t^{fw}, h_t^{bw}])\\
+= \exp(&W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw})- \tanh(c_{j-1}^{fw}))) \\
++ &W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw})- \tanh(c_{j+1}^{bw})))),
 \end{align}
-\subsection{An Additive Decomposition of the LSTM cell}
+Let
+\begin{equation}
+\beta_{t, c, j}^{fw} = \exp(W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw})- \tanh(c_{j-1}^{fw}))))
+\end{equation}
+and
+\begin{equation}
+\beta_{t, c, j}^{bw} = \exp(W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw})- \tanh(c_{j+1}^{bw}))))
+\end{equation}
+so that 
+\begin{equation}
+\beta_{t, c, j} = \beta_{t, c, j}^{fw} \beta_{t, c, j}^{bw}
+\end{equation}
+Then we have:
+\begin{align}
+	\exp(&W_{:c} [h_t^{fw}, h_t^{bw}]) \\
+= \exp(&\sum_{j=1}^t W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw}) - \tanh(c_{j-1}^{fw}))) +\\
+	&\sum_{j=t}^n W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw}) - \tanh(c_{j+1}^{fw}))))\\
+= \prod_{j=1}^t &\beta_{t, c, j}^{fw} \prod_{j=t}^n \beta_{t, c, j}^{bw}.
+\end{align}
 
+\begin{comment}
+\subsection{An Additive Decomposition of the LSTM cell}
 
 We will show below that the $\beta_{i,j}$  capture some notion of the importance of a word to the LSTM's output.   However, these terms fail to account for how the information contributed by word $j$ is affected by the LSTM's forget gates between words $j$ and $T$. Consequently, we empirically found that the importance scores from this approach often yield a considerable amount of false positives. A more nuanced approach is obtained by considering the additive decomposition of $c_T$ in equation \eqref{eq:additive}, where each term $e_j$ can be interpreted as the contribution to the cell state $c_T$ by word $j$. By iterating the equation $c_t = f_tc_{t - 1} + i_t \tilde{c}_t$, we get that
 \begin{equation}
@@ -222,7 +263,7 @@ In practice, the number of phrases is too large to feasibly compute the score of
 \subsection{Rules based classifier}
 
 The extracted patterns from Section \ref{sec:phrase_extraction} can be used to construct a simple, rules-based classifier which approximates the output of the original LSTM. Given a document and a list of patterns sorted by descending score given by $S$, the classifier sequentially searches for each pattern within the document using simple string matching. Once it finds a pattern, the classifier returns the associated class given by $C$, ignoring the lower ranked patterns. The resulting classifier is interpretable,  and despite its simplicity,  retains much of the accuracy of the LSTM used to build it.
-
+\end{comment}
 
 %formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
 
@@ -279,13 +320,32 @@ We demonstrate our results regarding different questions we are trying to answer
 \noindent \textbf{Bi-LSTM v.s. Uni-LSTM}
 
 
-The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, and further categorize them into \red{n} types, as shown in \ref{tab:bi-mlp}.
-
+The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, and further categorize them into \red{n} types, as shown in \ref{}.
+%{'EOETrue': 823, 'EOEFalse': 214, 'OEOTrue': 239, 'OEOFalse': 117}
+\begin{table}[t]
+\centering\centering\resizebox{\columnwidth}{!}{
+\begin{tabular}{llp{10cm}}
+\hline\hline
+category		& number	&examples \\
+OEOTrue		&14		& For \textbf{more} information check out : www.taconet.com.tw/cstudio/\\
+OEOFalse		&10		& Dr. Konan Peck , an assistant research fellow at Academia Sinica 's Institute of Biomedical Sciences -LRB- IBMS -RRB- , says that \textbf{biochips} need to be made more widely available as a molecular biology research tool .\\
+EOETrue		&38		& In \textbf{the} first quarter of this year , the development of Guangzhou 's privately owned enterprises again showed many characteristics : all walks of life are developing extensively , and the development of industry and commerce is remarkable .\\
+EOEFalse		&13		& \textbf{Guofang} Shen said that this bill is a bill carrying political discrimination and extremely unfriendly to China .\\
+\hline
+Embedding	&2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
+False		& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
+Nearby 		& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
+Others		& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
+\hline
+\end{tabular}}
+\label{tab:bi-uni}
+\caption{Statistic of Bi-LSTM and uni-LSTM comparison.}
+\end{table}
 
 
 \noindent \textbf{Bi-LSTM v.s. MLP(bi)}
 
-Further comparing the results of Bi-LSTM and MLP(bi), we can better understand the gains brought by the Bi-LSTM contextual encoding layer. Even leveraging the embeddings learned in Bi-LSTM model, the fine-tune MLP model still falls far behind the Bi-LSTM model. This comparison proves that the Bi-LSTM indeed empowers the entity detection ability. Further error analysis is shown in \red{Table}.
+Further comparing the results of Bi-LSTM and MLP(bi), we can better understand the gains brought by the Bi-LSTM contextual encoding layer. Even leveraging the embeddings learned in Bi-LSTM model, the fine-tune MLP model still falls far behind the Bi-LSTM model. This comparison proves that the Bi-LSTM indeed empowers the entity detection ability. Further error analysis is shown in \red{tab:bi-mlp}.
 
 \begin{table}[t]
 \centering\centering\resizebox{\columnwidth}{!}{
