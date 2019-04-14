@@ -33,7 +33,20 @@
 \usepackage{algpseudocode}
 \usepackage[noend,linesnumbered]{algorithm2e}
 
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{url}
+\usepackage{float}
+
 \usepackage[disable]{todonotes}
+
+\newcommand{\red}[1]{\textcolor{red}{#1}}
 
 
 \title{Analyze and Improve Cross-View Learning with Bayesian Ensemble}
@@ -213,9 +226,126 @@ The extracted patterns from Section \ref{sec:phrase_extraction} can be used to c
 
 %formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
 
-\section{Experiments TODO: add details}
+\section{Experimental Setup}
 
-We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
+We conduct extensive experiments to answer the question: What do the Bi-LSTM learn? 
+
+
+\subsection{Dataset} Our experiments are conducted based on OntoNotes 5 English dataset~\cite{weischedel2012ontonotes}, focusing on Entity Detection task. The Entity Detection task is usually formulated as a sequence labeling task: labels are assigned to each token. Different tagging scheme can be adopted, such as \textit{BIO}, \textit{BIOES}, etc. For simplification, in this work, we use \textit{IO} scheme: if the token is a part of entity, it will be annotated as \textbf{I}; otherwise, it will be annotated as \textbf{O}. One special case that this tagging scheme can not handle is that two entity appear consecutively in one sentence, because there is not boundary label such \textbf{B}~(begin of entity). So in our experiments, we remove the sentences with consecutive entities for further experiments. The performance is evaluated by Precision, Recall and F1 scores.
+
+\subsection{Hyper-parameters}
+
+
+\subsection{Setup}
+
+To investigate the problem: What does the Bi-LSTM learn, we decompose it into three small problems:
+
+\begin{itemize}
+	\item Does Bi-LSTM perform significantly better than Uni-directional LSTM and local models such as MLP? In what cases, Bi-LSTM is better than uni-directional LSTM and local models? And in what cases, Uni-directional LSTM and local models can also work well?
+	\item How to verify that the Bi-LSTM model learn to do prediction based on contextual information?
+	\item Why do Uni-directional LSTM and local model also work in some cases? 
+\end{itemize}
+
+To answer first question, we conduct the experiments with Bi-LSTM, Uni-directional LSTM model. The embedding is initialized with GloVe pretraining embeddings~\cite{pennington2014glove}. To investigate what kind of information gain provided by the LSTM, we also conduct experiments with MLP. We adopt the fine-tuned embeddings in LSTM and fix them during the training of MLP model. This is known as probing technique. 
+
+To answer the second question, we use the LSTM decomposition technique to further investigate the contribution distribution for the token level prediction. The decomposition is conducted for Bi-LSTM and Uni-directional LSTM. 
+
+To answer the third question, we leverage visualization techniques such as t-SNE~\cite{maaten2008visualizing}, to visualize the hidden vectors.
+
+\section{Results}
+
+We demonstrate our results regarding different questions we are trying to answer. 
+
+
+\subsection{Question 1}
+
+\begin{table}[t]
+	\centering
+	\begin{tabular}{l@{\qquad}ccc}
+		\toprule
+		\textbf{Model}         & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\ \midrule
+		Bi-LSTM &  84.82 & 83.60  & 84.20 \\
+		Uni-LSTM & 72.47 & 73.88 & 73.17 \\
+		MLP(bi) & 54.97 & 75.65 & 63.67 \\ 
+		MLP(uni) & 60.80 & 61.75 &  61.27 \\ 
+		\bottomrule
+	\end{tabular}
+	\vspace{3mm}
+	\caption{Entity Detection performance on OntoNotes 5 English Dataset Test set. Uni-LSTM denotes the Uni-directional LSTM. MLP(bi) denotes the MLP model based on the Bi-LSTM embeddings. MLP(uni) denotes the MLP model based on Uni-directional LSTM embeddings.}
+	\label{res:ner}
+\end{table}
+
+
+\noindent \textbf{Bi-LSTM v.s. Uni-LSTM}
+
+
+The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, and further categorize them into \red{n} types, as shown in \ref{tab:bi-mlp}.
+
+
+
+\noindent \textbf{Bi-LSTM v.s. MLP(bi)}
+
+Further comparing the results of Bi-LSTM and MLP(bi), we can better understand the gains brought by the Bi-LSTM contextual encoding layer. Even leveraging the embeddings learned in Bi-LSTM model, the fine-tune MLP model still falls far behind the Bi-LSTM model. This comparison proves that the Bi-LSTM indeed empowers the entity detection ability. Further error analysis is shown in \red{Table}.
+
+\begin{table}[t]
+\centering\centering\resizebox{\columnwidth}{!}{
+\begin{tabular}{llp{10cm}}
+\hline\hline
+category		& number	&examples \\
+OEOTrue		&14		& \textbf{Electrical} and high science and technology products grew considerably.\\
+OEOFalse		&47		& Another popular technique involves covering the trees with black \textbf{mosquito} nets to improve yields.\\
+EOETrue		&34		& David any reaction from the Bush team on the Democrats ' plan to contest the vote in Miami \textbf{-} Dade?\\
+EOEFalse		&0		& - \\
+\hline
+Embedding	&13		&  \textbf{Consumer} activists are skeptical. \\
+False		& 46		& I forced myself to refrain from the grief of \textbf{loosing} my beloved car -LRB- mine was liability - only coverage -RRB- and asked the friend to send their family home.\\
+Inner 		& 20		& It says that what \textbf{the} North Koreans did was a threat to international peace and security.\\
+Others		& 16		& It achieved a total volume of 4 billion US dollars of goods going into and out of the area , increasing by 83 \% over \textbf{the same period of the previous} year , with a total amount of 1 billion US dollars from imports and exports.\\
+\hline
+\end{tabular}}
+\label{tab:bi-mlp}
+\caption{Statistic of Bi-LSTM and MLP comparison.}
+\end{table}
+
+
+\noindent \textbf{Uni-LSTM v.s. MLP(uni)}
+
+
+
+
+
+\subsection{Question 2}
+
+In question 1, we have empirically shown that the LSTM model could perform significantly better than local model, then we also want to show this in more theoretically way. With LSTM decomposition, we find that the LSTM can correct several errors made by local model such as MLP. 
+
+
+
+
+
+\subsection{Question 3}
+
+\begin{figure}[t]
+	\centering
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\linewidth]{glove_embedding_positive.pdf}
+		\caption{Glove Embedding with entity word}
+		\label{fig:glove_positive}
+	\end{subfigure}\hfil 
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\linewidth]{glove_embedding_negative.pdf}
+		\caption{Glove Embedding with non-entity word}
+		\label{fig:glove_negative}
+	\end{subfigure}
+\end{figure}
+
+We can observe that with local model such as MLP(bi) or MLP(uni), the model can also achieve reasonable performance. More than 60 F1 score can be obtained by simple local model. In this subsection, we are trying to investigate the reason behind this, mainly focusing on the embedding level. 
+
+We firstly classify the word into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In the following figures, red dots denote entity words and grey dots denote non-entity words. 
+
+We firstly decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. We can observe that most of the entity word and non-entity word are mix in the middle of the figures. 
+
+
+% We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
 
 %Describe the datasets you tested on; justify their relevance
 %Compare empirically the techniques for complexity, performance, ease of use, etc.
@@ -225,25 +355,7 @@ We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong K
  
 \section{Results}
 
-\begin{table}[t]
-\centering\centering\resizebox{\columnwidth}{!}{
-\begin{tabular}{lll}
-\hline\hline
-category		& number	&examples \\
-OEOTrue		&14		& \textbf{Electrical} and high science and technology products grew considerably .\\
-OEOFalse		&47		& Another popular technique involves covering the trees with black \textbf{mosquito} nets to improve yields .\\
-EOETrue		&34		& David any reaction from the Bush team on the Democrats ' plan to contest the vote in Miami \textbf{-} Dade ?\\
-EOEFalse		&0		&\\
-\hline
-Embedding	&13		&  \textbf{Consumer} activists are skeptical . \\
-False		& 46		& I forced myself to refrain from the grief of \textbf{loosing} my beloved car -LRB- mine was liability - only coverage -RRB- and asked the friend to send their family home .\\
-Inner 		& 20		& It says that what \textbf{the} North Koreans did was a threat to international peace and security /.\\
-Others		& 16		& It achieved a total volume of 4 billion US dollars of goods going into and out of the area , increasing by 83 \% over \textbf{the same period of the previous} year , with a total amount of 1 billion US dollars from imports and exports .\\
-\hline
-\end{tabular}}
-\label{tab:example}
-\caption{TODO.}
-\end{table}
+
 
 \section{Conclusion}
 %Can your new technique effectively tackle the problem?
