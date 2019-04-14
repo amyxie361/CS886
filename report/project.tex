@@ -272,7 +272,7 @@ We demonstrate our results regarding different questions we are trying to answer
 		\bottomrule
 	\end{tabular}
 	\vspace{3mm}
-	\caption{Entity Detection performance on OntoNotes 5 English Dataset Test set.}
+	\caption{Entity Detection performance on OntoNotes 5 English Dataset Test set. Uni-LSTM denotes the Uni-directional LSTM. MLP(bi) denotes the MLP model based on the Bi-LSTM embeddings. MLP(uni) denotes the MLP model based on Uni-directional LSTM embeddings.}
 	\label{res:ner}
 \end{table}
 
@@ -304,7 +304,32 @@ In question 1, we have empirically shown that the LSTM model could perform signi
 
 
 \subsection{Question 3}
-\noindent \textbf{Question 3}
+
+\begin{figure}[t]
+	\centering
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\linewidth]{glove_embedding_positive.pdf}
+		\caption{Glove Embedding with entity word}
+		\label{fig:glove_positive}
+	\end{subfigure}\hfil 
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\linewidth]{glove_embedding_negative.pdf}
+		\caption{Glove Embedding with non-entity word}
+		\label{fig:glove_negative}
+	\end{subfigure}
+\end{figure}
+
+We can observe that with local model such as MLP(bi) or MLP(uni), the model can also achieve reasonable performance. More than 60 F1 score can be obtained by simple local model. In this subsection, we are trying to investigate the reason behind this, mainly focusing on the embedding level. 
+
+We firstly classify the word into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In the following figures, red dots denote entity words and grey dots denote non-entity words. 
+
+We firstly decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. We can observe that most of the entity word and non-entity word are mix in the middle of the figures. 
+
+
+
+
+
+
 
 
 
