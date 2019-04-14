@@ -125,7 +125,7 @@ Another approach that has emerged in the literature Alikaniotis et al. (2016) De
 %What is the state of the art?
 %Any open problem?
 
-\section{Main}
+\section{Models}
 
 To understand the mechanism behind current sequential models, we follow [TODO Ian Tenney]'s ``edge probing'' framework to construct an architectures across tasks. Unlike [Tenney] focusing on sequence classification tasks, we focus on sequence tagging problem. That is to say, given a sentence, we have to give each token a label based on the whole sentence.
 
@@ -135,12 +135,11 @@ Formally, we represent a sentence as a list of tokens $T = [t_1, t_2, ... , t_n]
 %\red{We focus on the named entity recognition task. This is to tag each word its category in terms of entity, that is does the word refer to a person, a location, an organization, etc. Usually the system needs to tag for each token their category alone with whether it is the start, inner or end part of this entity. To make future analysis easier, we simplify the task to be a binary classification task. That is to say, we classify each token to be either entity or non-entity.} 
 %states twice ?
 
-\subsection{Models}
 
 We implement several models to compare the contribution of both embedding information and contextual information to the final prediction. 
 
 
-\textbf{Uni-directional LSTM}
+\subsection{Uni-directional LSTM}
 
 We follow the traditional LSTM mechanism to construct a model for sequence tagging task. Given a sequence of word embeddings, $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d$, an uni-directional LSTM processes one word at a time, keeping track of cell-gates $C = [c_1, c_2, ... , c_n]$ and hidden states $H = [h_1, h_2, ... , h_n]$. After processing each token, the hidden state of current token is then passed through a fully-connected layer to form the probability distribution over classes. After a softmax activation function and argmax, the model will predict a label across classes.
 
@@ -172,7 +171,7 @@ This is the forward directional LSTM. In this case, the information is passed fr
 %\end{align}
 
 
-\textbf{Bi-directional LSTM}
+\subsection{Bi-directional LSTM}
 
 Uni-directional LSTM networks suffer from only seeing information from one side of t he sentence. So we also include a bi-directional LSTM to examine the information learnt from both sides. The encoding process is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. We also demote the concatenated matrix of $*_t^{fw}$ and $*_t^{bw}$ as $[*_t^{fw}, *_t^{bw}]$. After concatenate the forward and backward gates together, using $[*_t^{bw}, *_t^{fw}]$ to replace $*_t$ in formulas from \ref{eq:1f} to \ref{eq:1h}, we can represent the update formulas in a same form. 
 
@@ -182,7 +181,7 @@ p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:c} [h_t^{fw}, h
 \end{equation}
 
 
-\textbf{MLP}
+\subsection{MLP}
 
 To examine what information has been learnt by LSTM from the context and what information can be directly learned from the word embedding, we also implemented a m-layer MLP network to tag the tokens only according to the embeddings. Each MLP layer can be represented as follow:
 The input of the $i$ th layer is represented as $x_i$, then the $i$ th layer is $f_i(x_i) = \sigma(W_i x_i + b_i)$, where $W_i$ and $b_i$ are the weights and bias of the $i$ th layer. In this work we use ReLU as our activation function $\sigma$. Then the output of the $i$ th layer $f_i(x_i)$ is then feed into the next layer as input. That is to say $x_{i+1} = f_i(x_i)$. 
@@ -241,7 +240,7 @@ For MLP model, the probability distribution of each token only rely on it's own 
 \end{equation} 
 We consider all four kinds of embeddings for comparison.
 
-\subsection{Model Comparison}
+\section{Model Comparison}
 
 To investigate the problem: What does the Bi-LSTM learn, we decompose it into three small problems:
 
@@ -287,7 +286,7 @@ We demonstrate our results regarding different questions we are trying to answer
 		\textbf{Model}         & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\ \midrule
 		Bi-LSTM &  84.82 & 83.60  & 84.20 \\
 		Uni-LSTM-forward & 72.47 & 73.88 & 73.17 \\
-		Uni-LSTM-backward & 80.31 & 80.28 & 80.29 \\
+		Uni-LSTM-backward & 80.31 & 80.28 & 80.29 \\ \midrule
 		MLP(bi) & 54.97 & 75.65 & 63.67 \\ 
 		MLP(uni-forward) & 60.80 & 61.75 &  61.27 \\ 
 		MLP(uni-backward) & 54.61 & 75.99 & 63.55 \\ 
@@ -368,55 +367,48 @@ In question 1, we have empirically shown that the LSTM model could perform signi
 
 \begin{figure}[t]
 	\centering
-	\begin{subfigure}{0.5\textwidth}
+	\begin{subfigure}{0.24\textwidth}
 		\includegraphics[width=\linewidth]{glove_embedding_positive.pdf}
 		\caption{Glove Embedding with entity word}
 		\label{fig:glove_positive}
 	\end{subfigure}\hfil 
-	\begin{subfigure}{0.5\textwidth}
+	\begin{subfigure}{0.24\textwidth}
 		\includegraphics[width=\linewidth]{glove_embedding_negative.pdf}
 		\caption{Glove Embedding with non-entity word}
 		\label{fig:glove_negative}
-	\end{subfigure}
+	\end{subfigure}\hfil
+	\begin{subfigure}{0.24\textwidth}
+	\includegraphics[width=\linewidth]{bi_lstm_gold_positive.pdf}
+	\caption{Bi-LSTM Embedding with entity word}
+	\label{fig:bi_lstm_gold_positive}
+\end{subfigure}\hfil 
+\begin{subfigure}{0.24\textwidth}
+	\includegraphics[width=\linewidth]{bi_lstm_gold_negative.pdf}
+	\caption{Bi-LSTM Embedding with non-entity word}
+	\label{fig:bi_lstm_gold_negative}
+\end{subfigure}
+\bigskip
+\begin{subfigure}{0.24\textwidth}
+	\includegraphics[width=\linewidth]{bi_lstm_mlp_positive.pdf}
+	\caption{Bi-LSTM Embedding with entity word based on the prediction of MLP model}
+	\label{fig:bi_lstm_mlp_positive}
+\end{subfigure}\hfil 
+\begin{subfigure}{0.24\textwidth}
+	\includegraphics[width=\linewidth]{bi_lstm_mlp_negative.pdf}
+	\caption{Bi-LSTM Embedding with non-entity word based on the prediction of MLP model}
+	\label{fig:bi_lstm_mlp_negative}
+\end{subfigure}
 \end{figure}
 
 We can observe that with local model such as MLP(bi) or MLP(uni), the model can also achieve reasonable performance. More than 60 F1 score can be obtained by simple local model. In this subsection, we are trying to investigate the reason behind this, mainly focusing on the embedding level. 
 
-We firstly classify the word into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In the following figures, red dots denote entity words and grey dots denote non-entity words. 
+We firstly classify the words into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In the following figures, red dots denote entity words and grey dots denote non-entity words. 
 
-We decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. We can observe that most of the entity word and non-entity word are mix in the middle of the figures. 
+We decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. With these two figures, we can observe that the GloVe embeddings indeed contain some entity-related information, because we can observe that the entity-word distribution is not same as non-entity-word distribution. But we still can find that most of the entity word and non-entity word are mix in the middle of the figures. 
 
-\begin{figure}[t]
-	\centering
-	\begin{subfigure}{0.5\textwidth}
-		\includegraphics[width=\linewidth]{bi_lstm_gold_positive.pdf}
-		\caption{Bi-LSTM Embedding with entity word}
-		\label{fig:bi_lstm_gold_positive}
-	\end{subfigure}\hfil 
-	\begin{subfigure}{0.5\textwidth}
-		\includegraphics[width=\linewidth]{bi_lstm_gold_negative.pdf}
-		\caption{Bi-LSTM Embedding with non-entity word}
-		\label{fig:bi_lstm_gold_negative}
-	\end{subfigure}
-\end{figure}
-
-\begin{figure}[t]
-	\centering
-	\begin{subfigure}{0.5\textwidth}
-		\includegraphics[width=\linewidth]{bi_lstm_mlp_positive.pdf}
-		\caption{Bi-LSTM Embedding with entity word based on the prediction of MLP model}
-		\label{fig:bi_lstm_mlp_positive}
-	\end{subfigure}\hfil 
-	\begin{subfigure}{0.5\textwidth}
-		\includegraphics[width=\linewidth]{bi_lstm_mlp_negative.pdf}
-		\caption{Bi-LSTM Embedding with non-entity word based on the prediction of MLP model}
-		\label{fig:bi_lstm_mlp_negative}
-	\end{subfigure}
-\end{figure}
+We further decompose the embeddings learned from the BiLSTM model, as shown in Figure~\ref{fig:bi_lstm_gold_positive} and Figure~\ref{fig:bi_lstm_gold_negative}. Compared with the figures from GloVe embeddings, we can observe that the entity-words are clustered tighter in Bi-LSTM based embeddings. This phenomenon indicates that the training process optimize the embeddings representation.
 
 
-
-We further decompose 
 
 
 % We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
