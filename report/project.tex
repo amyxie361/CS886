@@ -125,7 +125,7 @@ Another approach that has emerged in the literature Alikaniotis et al. (2016) De
 %What is the state of the art?
 %Any open problem?
 
-\section{Main}
+\section{Models}
 
 To understand the mechanism behind current sequential models, we follow [TODO Ian Tenney]'s ``edge probing'' framework to construct an architectures across tasks. Unlike [Tenney] focusing on sequence classification tasks, we focus on sequence tagging problem. That is to say, given a sentence, we have to give each token a label based on the whole sentence.
 
@@ -135,12 +135,9 @@ Formally, we represent a sentence as a list of tokens $T = [t_1, t_2, ... , t_n]
 %\red{We focus on the named entity recognition task. This is to tag each word its category in terms of entity, that is does the word refer to a person, a location, an organization, etc. Usually the system needs to tag for each token their category alone with whether it is the start, inner or end part of this entity. To make future analysis easier, we simplify the task to be a binary classification task. That is to say, we classify each token to be either entity or non-entity.} 
 %states twice ?
 
-\subsection{Models}
-
 We implement several models to compare the contribution of both embedding information and contextual information to the final prediction. 
 
-
-\textbf{Uni-directional LSTM}
+\subsection{Uni-directional LSTM}
 
 We follow the traditional LSTM mechanism to construct a model for sequence tagging task. Given a sequence of word embeddings, $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d$, an uni-directional LSTM processes one word at a time, keeping track of cell-gates $C = [c_1, c_2, ... , c_n]$ and hidden states $H = [h_1, h_2, ... , h_n]$. After processing each token, the hidden state of current token is then passed through a fully-connected layer to form the probability distribution over classes. After a softmax activation function and argmax, the model will predict a label across classes.
 
@@ -172,7 +169,7 @@ This is the forward directional LSTM. In this case, the information is passed fr
 %\end{align}
 
 
-\textbf{Bi-directional LSTM}
+\subsection{Bi-directional LSTM}
 
 Uni-directional LSTM networks suffer from only seeing information from one side of t he sentence. So we also include a bi-directional LSTM to examine the information learnt from both sides. The encoding process is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. We also demote the concatenated matrix of $*_t^{fw}$ and $*_t^{bw}$ as $[*_t^{fw}, *_t^{bw}]$. After concatenate the forward and backward gates together, using $[*_t^{bw}, *_t^{fw}]$ to replace $*_t$ in formulas from \ref{eq:1f} to \ref{eq:1h}, we can represent the update formulas in a same form. 
 
@@ -182,16 +179,16 @@ p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:c} [h_t^{fw}, h
 \end{equation}
 
 
-\textbf{MLP}
+\subsection{MLP}
 
 To examine what information has been learnt by LSTM from the context and what information can be directly learned from the word embedding, we also implemented a m-layer MLP network to tag the tokens only according to the embeddings. Each MLP layer can be represented as follow:
 The input of the $i$ th layer is represented as $x_i$, then the $i$ th layer is $f_i(x_i) = \sigma(W_i x_i + b_i)$, where $W_i$ and $b_i$ are the weights and bias of the $i$ th layer. In this work we use ReLU as our activation function $\sigma$. Then the output of the $i$ th layer $f_i(x_i)$ is then feed into the next layer as input. That is to say $x_{i+1} = f_i(x_i)$. 
 
 We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward uni-directional LSTM and the bi-directional LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f_m(e_t))$.% explain more?
 
-\subsection{Decomposition}
+\section{Decomposition}
 
-\textbf{Uni-LSTM}
+\subsection{Uni-LSTM}
 
 We now show that we can decompose the numerator of $p_{t, c}$ into a product of factors, and interpret those factors as the contribution of individual words of the predicted probability of class $c$ for uni-LSTM. Also taking the forward direction as an example, define 
 \begin{equation}\label{eq:uni-beta} 
@@ -205,7 +202,7 @@ As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word
 This is a direct extension of [TODO]'s work, in which we expand their method to suit sequence tagging tasks.
 The backward direction will just be the same.
 
-\textbf{Bi-LSTM}
+\subsection{Bi-LSTM}
 
 For the bi-directional LSTM decomposition, we can simply de-concatenate the gate states and compute the contribution of each direction as in the uni-direction version. Then each token's probability distribution can be taken as a combination of both direction. That is to say, the probability can be interpreted as follow:
 \begin{align}\label{eq:bi-beta} 
@@ -233,7 +230,7 @@ Then we have:
 = \prod_{j=1}^t &\beta_{t, c, j}^{fw} \prod_{j=t}^n \beta_{t, c, j}^{bw}.
 \end{align}
 
-\textbf{MLP}
+\subsection{MLP}
 
 For MLP model, the probability distribution of each token only rely on it's own embedding and the weight vector in the network. So the contribution weight before softmax activation function can be written as: 
 \begin{equation}
@@ -241,7 +238,7 @@ For MLP model, the probability distribution of each token only rely on it's own 
 \end{equation} 
 We consider all four kinds of embeddings for comparison.
 
-\subsection{Model Comparison}
+\section{Model Comparison}
 
 To investigate the problem: What does the Bi-LSTM learn, we decompose it into three small problems:
 
@@ -299,21 +296,20 @@ We demonstrate our results regarding different questions we are trying to answer
 
 \noindent \textbf{Bi-LSTM v.s. Uni-LSTM}
 
+The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, as shown in \ref{tab:bi-uni}. We categorize the cases from three dimensions. First, whether the token is an entity or an ordinary word according to golden label, and whether the token is in the vocabulary. The third dimension is from hand annotation. We sampled 50 cases from 1393 cases and annotate to further categorize the error source. We give each an example for each case and the target tokens are in bold form.
 
-The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, and further categorize them into \red{n} types, as shown in \ref{}.
-%{'EOETrue': 823, 'EOEFalse': 214, 'OEOTrue': 239, 'OEOFalse': 117}
 \begin{table}[t]
 \centering\centering\resizebox{\columnwidth}{!}{
 \begin{tabular}{lllp{8cm}}
 \hline\hline
 Category		&Total \# case 	& Sample \# case	&examples \\
-OEOTrue		& 239		&14		& For \textbf{more} information check out : www.taconet.com.tw/cstudio/\\
-OEOFalse		& 117		&10		& Dr. Konan Peck , an assistant research fellow at Academia Sinica 's Institute of Biomedical Sciences -LRB- IBMS -RRB- , says that \textbf{biochips} need to be made more widely available as a molecular biology research tool .\\
-EOETrue		& 823		&38		& In \textbf{the} first quarter of this year , the development of Guangzhou 's privately owned enterprises again showed many characteristics : all walks of life are developing extensively , and the development of industry and commerce is remarkable .\\
-EOEFalse		& 214		&13		& \textbf{Guofang} Shen said that this bill is a bill carrying political discrimination and extremely unfriendly to China .\\
+Ordinary-Vocab		& 239		&14		& For \textbf{more} information check out : www.taconet.com.tw/cstudio/\\
+Ordinary-OOV		& 117		&10		& Dr. Konan Peck , an assistant research fellow at Academia Sinica 's Institute of Biomedical Sciences -LRB- IBMS -RRB- , says that \textbf{biochips} need to be made more widely available as a molecular biology research tool .\\
+Entity-Vocab		& 823		&38		& In \textbf{the} first quarter of this year , the development of Guangzhou 's privately owned enterprises again showed many characteristics : all walks of life are developing extensively , and the development of industry and commerce is remarkable .\\
+Entity-OOV		& 214		&13		& \textbf{Guofang} Shen said that this bill is a bill carrying political discrimination and extremely unfriendly to China .\\
 \hline
-Embedding	& -			& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
-False		& -			& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
+Form	& -			& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
+OOV		& -			& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
 Nearby 		& - 			& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
 Others		& - 			& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
 \hline
@@ -321,6 +317,12 @@ Others		& - 			& 9		&And although Pennsylvania and Massachusetts suffered slight
 \label{tab:bi-uni}
 \caption{Statistic of Bi-LSTM and uni-LSTM comparison.}
 \end{table}
+
+In table \ref{tab:bi-uni}, Ordinary means the target token is a non-entity in golden label while Entity means it is an entity. Vocab means the token is in the Glove vocabulary while OOV means it is not. We categorize the error into four cases. 
+\begin{itemize}
+	\item Form: in some cases, words will be in different form. For example, the first character of the first word will be capitalized. Since Glove is a case sensitive embedding, the two form will have different embedding vectors, which will lead to difference in inference phrase. The 
+	\item OOV: some 
+
 
 
 \noindent \textbf{Bi-LSTM v.s. MLP(bi)}
@@ -346,6 +348,8 @@ Others		&-	& 16		& It achieved a total volume of 4 billion US dollars of goods g
 \label{tab:bi-mlp}
 \caption{Statistic of Bi-LSTM and MLP comparison.}
 \end{table}
+
+
 
 
 \noindent \textbf{Uni-LSTM v.s. MLP(uni)}
