@@ -139,24 +139,27 @@ Formally, we represent a sentence as a list of tokens $T = [t_1, t_2, ... , t_n]
 
 We implement several models to compare the contribution of both embedding information and contextual information to the final prediction. 
 
-\ 
 
 \textbf{Uni-directional LSTM}
 
 We follow the traditional LSTM mechanism to construct a model for sequence tagging task. Given a sequence of word embeddings, $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d$, an uni-directional LSTM processes one word at a time, keeping track of cell-gates $C = [c_1, c_2, ... , c_n]$ and hidden states $H = [h_1, h_2, ... , h_n]$. After processing each token, the hidden state of current token is then passed through a fully-connected layer to form the probability distribution over classes. After a softmax activation function and argmax, the model will predict a label across classes.
 
 In detail, each uni-LSTM cell computes $h_t$ and $c_t$ as a function of $e_t, c_{t-1}$ using the following updates. 
-\begin{align}\label{eq:f1}
-f_t & = \sigma(W_f x_t + V_f h_{t - 1} + b_f) \\
-i_t & = \sigma(W_i x_t + V_i h_{t - 1} + b_i) \\
-o_t & = \sigma(W_o x_t + V_o h_{t - 1} + b_o) \\
+\begin{align} 
+f_t & = \sigma(W_f x_t + V_f h_{t - 1} + b_f) \label{eq:1f}\\
+i_t & = \sigma(W_i x_t + V_i h_{t - 1} + b_i) \label{eq:1i}\\
+o_t & = \sigma(W_o x_t + V_o h_{t - 1} + b_o) \label{eq:1o}\\
 \tilde{c}_t & = \tanh(W_c x_t + V_c h_{t - 1} + b_c) \\
-c_t & = f_t \odot c_{t - 1} + i_t \odot \tilde{c}_t \\
-h_t & = o_t \odot \tanh(c_t)
+c_t & = f_t \odot c_{t - 1} + i_t \odot \tilde{c}_t \label{eq:1c}\\
+h_t & = o_t \odot \tanh(c_t)\label{eq:1h}
 \end{align}
 
 As initial values, we define $c_0=h_0=0$. 
-Then the probability distribution for the $t$ th token for the $c$ th class is specified by $p_{t, c} = \text{SoftMax}(W h_t) = \frac{e^{W_{:c} h_t}}{\sum_{j = 1} ^ C e^{W_{:j} h_t}}$, where $W_{:j}$ is the $i$ th row of the matrix $W$.
+Then the probability distribution for the $t$ th token for the $c$ th class is specified by 
+\begin{equation}
+p_{t, c} = \text{SoftMax}(W h_t) = \frac{e^{W_{:c} h_t}}{\sum_{j = 1} ^ C e^{W_{:j} h_t}},
+\end{equation}
+where $W_{:j}$ is the $i$ th row of the matrix $W$.
 
 This is the forward directional LSTM. In this case, the information is passed from the beginning of the sentence to the end. We also consider the backward directional LSTM for later comparison. The only difference will be the update direction and the initial value. The initial values are assigned to $c_n=h_n=0$. And the information is passed from the end of the sentence to the beginning, which means we update the $t$ th token using the $t+1$ th token instead of the $t-1$ th as in the forward version.
 %\begin{align}
@@ -168,22 +171,23 @@ This is the forward directional LSTM. In this case, the information is passed fr
 %h_t & = o_t \odot \tanh(c_t)
 %\end{align}
 
-\ 
 
 \textbf{Bi-directional LSTM}
 
-Uni-directional LSTM networks suffer from only seeing information from one side of the sentence. So we also include a bi-directional LSTM to examine the information learnt from both sides. The encoding process is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. We also demote the concatenated matrix of $*_t^{fw}$ and $*_t^{bw}$ as $[*_t^{fw}, *_t^{bw}]$. After concatenate the forward and backward gates together, using $[*_t^{bw}, *_t^{fw}]$ to replace $*_t$ in formulas of \ref{eq:f1}, we can represent the update formulas in a same form. 
+Uni-directional LSTM networks suffer from only seeing information from one side of t he sentence. So we also include a bi-directional LSTM to examine the information learnt from both sides. The encoding process is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. We also demote the concatenated matrix of $*_t^{fw}$ and $*_t^{bw}$ as $[*_t^{fw}, *_t^{bw}]$. After concatenate the forward and backward gates together, using $[*_t^{bw}, *_t^{fw}]$ to replace $*_t$ in formulas from \ref{eq:1f} to \ref{eq:1h}, we can represent the update formulas in a same form. 
 
-Also probability distribution for the $t$ th token for the $c$ th class is specified by $p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:c} [h_t^{fw}, h_t^{bw}]}}{\sum_{j = 1} ^ C e^{W_{:j} [h_t^{fw}, h_t^{bw}]}}$,.
+Also probability distribution for the $t$ th token for the $c$ th class is specified by 
+\begin{equation}
+p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:c} [h_t^{fw}, h_t^{bw}]}}{\sum_{j = 1} ^ C e^{W_{:j} [h_t^{fw}, h_t^{bw}]}}.
+\end{equation}
 
-\ 
 
 \textbf{MLP}
 
-To examine what information has been learnt by LSTM from the context and what information can be directly learned from the word embedding, we also implemented a 2-layer MLP network to tag the tokens only according to the embeddings. Each MLP layer can be represented as follow:
-The input of the $i$ th layer is represented as $x_i$, then the $i$ th layer is $f_i(x_i) = \sigma(W_i x_i + b_i)$, where $W_i$ and $b_i$ are the weights and bias of the $i$ th layer. In this work we use ReLU as our activation function $\sigma$. Then the output of the $i$ th layer $f_i(x_i)$ is then feed into the next layer as input. That is to say $x_{i+1} = f_i(x_i)$. In this implementation, we use a 2-hidden-layer MLP.
+To examine what information has been learnt by LSTM from the context and what information can be directly learned from the word embedding, we also implemented a m-layer MLP network to tag the tokens only according to the embeddings. Each MLP layer can be represented as follow:
+The input of the $i$ th layer is represented as $x_i$, then the $i$ th layer is $f_i(x_i) = \sigma(W_i x_i + b_i)$, where $W_i$ and $b_i$ are the weights and bias of the $i$ th layer. In this work we use ReLU as our activation function $\sigma$. Then the output of the $i$ th layer $f_i(x_i)$ is then feed into the next layer as input. That is to say $x_{i+1} = f_i(x_i)$. 
 
-We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward uni-directional LSTM and the bi-directional LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f_3(e_t))$.% explain more?
+We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward uni-directional LSTM and the bi-directional LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f_m(e_t))$.% explain more?
 
 \subsection{Decomposition}
 
@@ -224,66 +228,27 @@ so that
 Then we have:
 \begin{align}
 	\exp(&W_{:c} [h_t^{fw}, h_t^{bw}]) \\
-= \exp(&\sum_{j=1}^t W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw}) - \tanh(c_{j-1}^{fw}))) +\\
-	&\sum_{j=t}^n W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw}) - \tanh(c_{j+1}^{fw}))))\\
+= \exp(&\sum_{j=1}^t W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw}) - \tanh(c_{j-1}^{fw})))\\
+	+&\sum_{j=t}^n W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw}) - \tanh(c_{j+1}^{fw}))))\\
 = \prod_{j=1}^t &\beta_{t, c, j}^{fw} \prod_{j=t}^n \beta_{t, c, j}^{bw}.
 \end{align}
 
-\begin{comment}
-\subsection{An Additive Decomposition of the LSTM cell}
+\textbf{MLP}
 
-We will show below that the $\beta_{i,j}$  capture some notion of the importance of a word to the LSTM's output.   However, these terms fail to account for how the information contributed by word $j$ is affected by the LSTM's forget gates between words $j$ and $T$. Consequently, we empirically found that the importance scores from this approach often yield a considerable amount of false positives. A more nuanced approach is obtained by considering the additive decomposition of $c_T$ in equation \eqref{eq:additive}, where each term $e_j$ can be interpreted as the contribution to the cell state $c_T$ by word $j$. By iterating the equation $c_t = f_tc_{t - 1} + i_t \tilde{c}_t$, we get that
+For MLP model, the probability distribution of each token only rely on it's own embedding and the weight vector in the network. So the contribution weight before softmax activation function can be written as: 
 \begin{equation}
-c_T = \sum_{i=1}^T (\prod_{j=i + 1}^T f_j) i_i \tilde{c}_i = \sum_{i=1}^T e_{i, T} \label{eq:additive}
-\end{equation}
-This suggests a natural definition of an alternative score to the $\beta_{i, j}$, corresponding to augmenting the $c_j$ terms with products of forget gates to reflect the upstream changes made to $c_j$ after initially processing word $j$. 
-\begin{align}
-\label{eq:gamma}
-\exp(W_i h_T) & = \prod_{j=1}^T \exp \left( W_i(o_T \odot (\tanh(\sum_{k = 1}^j e_{k, T}) - \tanh(\sum_{k=1}^{j - 1}e_{k, T})))\right) \\
-& = \prod_{j=1}^T \exp \left( W_i(o_T \odot (\tanh((\prod_{k=j+1}^t f_k) c_j) - \tanh((\prod_{k=j}^t f_k) c_{j - 1}))) \right) \\
-& = \prod_{j=1}^T \gamma_{i,j}
-\end{align}
-\section{Phrase Extraction for Document Classification}
-We now introduce a technique for using our variable importance scores to extract phrases from a trained LSTM. To do so, we search for phrases which consistently provide a large contribution to the prediction of a particular class relative to other classes. The utility of these patterns is validated by using them as input for a rules based classifier. For simplicity, we focus on the binary classification case.
-\subsection{Phrase Extraction}
-\label{sec:phrase_extraction}
-A phrase can be reasonably described as predictive if, whenever it occurs, it causes a document to both be labelled as a particular class, and not be labelled as any other. As our importance scores introduced above correspond to the contribution of particular words to class predictions, they can be used to score potential patterns by looking at a pattern's average contribution to the prediction of a given class relative to other classes. More precisely, given a collection of $D$ documents $\{\{x_{i,j}\}_{i = 1}^ {N_d} \}_{j=1}^D$, for a given phrase $w_1,...,w_k$ we can compute scores $S_1, S_2$ for classes 1 and 2, as well as a combined score $S$ and class $C$ as
-\begin{align}
-S_1(w_1,...,w_k) & =  \frac{\text{Average}_{j,b}\left\lbrace \prod_{l=1}^k \beta_{1, b + l, j} | x_{b + i, j} = w_i, i = 1,...,k  \right\rbrace}{\text{Average}_{j,b}\left\lbrace \prod_{l=1}^k \beta_{2, b + l, j} | x_{b + i, j} = w_i, i = 1,...,k  \right\rbrace} \\
-S_2(w_1,..,w_k) & = \frac{1}{S_1(w_1,...,w_k)} \\
-S(w_1,...,w_k) & = \max_i(S_i(w_1,...,w_k))\\
-C(w_1,...,w_k) & = \text{argmax}_i(S_i(w_1,...,w_k))
-\end{align}
-where $\beta_{i, j, k}$ denotes $\beta_{i, j}$ applied to document $k$. 
+\beta_{t, c} = f_m(f_{m-1}(...f_1(e_t)))_{:c}
+\end{equation} 
+We consider all four kinds of embeddings for comparison.
 
-The numerator of $S_1$ denotes the average contribution of the phrase to the prediction of class 1 across all occurrences of the phrase. The denominator denotes the same statistic, but for class 2. Thus, if $S_1$ is high, then $w_1,...,w_k$ is a strong signal for class 1, and likewise for $S_2$. We propose to use $S$ as a score function in order to search for high scoring, representative, phrases which provide insight into the trained LSTM, and $C$ to denote the class corresponding to a phrase.
-
-In practice, the number of phrases is too large to feasibly compute the score of them all. Thus, we approximate a brute force search through a two step procedure. First, we construct a list of candidate phrases by searching for strings of consecutive words $j$ with importance scores $\beta_{i,j} > c$ for any $i$ and some threshold $c$; in the experiments below we use $c=1.1$. Then, we score and rank the set of candidate phrases, which is much smaller than the set of all phrases. 
-
-\subsection{Rules based classifier}
-
-The extracted patterns from Section \ref{sec:phrase_extraction} can be used to construct a simple, rules-based classifier which approximates the output of the original LSTM. Given a document and a list of patterns sorted by descending score given by $S$, the classifier sequentially searches for each pattern within the document using simple string matching. Once it finds a pattern, the classifier returns the associated class given by $C$, ignoring the lower ranked patterns. The resulting classifier is interpretable,  and despite its simplicity,  retains much of the accuracy of the LSTM used to build it.
-\end{comment}
-
-%formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
-
-\section{Experimental Setup}
-
-We conduct extensive experiments to answer the question: What do the Bi-LSTM learn? 
-
-
-\subsection{Dataset} Our experiments are conducted based on OntoNotes 5 English dataset~\cite{weischedel2012ontonotes}, focusing on Entity Detection task. The Entity Detection task is usually formulated as a sequence labeling task: labels are assigned to each token. Different tagging scheme can be adopted, such as \textit{BIO}, \textit{BIOES}, etc. For simplification, in this work, we use \textit{IO} scheme: if the token is a part of entity, it will be annotated as \textbf{I}; otherwise, it will be annotated as \textbf{O}. One special case that this tagging scheme can not handle is that two entity appear consecutively in one sentence, because there is not boundary label such \textbf{B}~(begin of entity). So in our experiments, we remove the sentences with consecutive entities for further experiments. The performance is evaluated by Precision, Recall and F1 scores.
-
-\subsection{Hyper-parameters}
-
-
-\subsection{Setup}
+\subsection{Model Comparison}
 
 To investigate the problem: What does the Bi-LSTM learn, we decompose it into three small problems:
 
 \begin{itemize}
-	\item Does Bi-LSTM perform significantly better than Uni-directional LSTM and local models such as MLP? In what cases, Bi-LSTM is better than uni-directional LSTM and local models? And in what cases, Uni-directional LSTM and local models can also work well?
-	\item How to verify that the Bi-LSTM model learn to do prediction based on contextual information?
+	\item Does Bi-LSTM perform significantly better than Uni-directional LSTM and local models such as MLP? 
+	In what cases, Bi-LSTM, Uni-directional LSTM and local models work well or better than the other models?
+	\item Does Bi-LSTM model learn to do prediction from contextual information? How to verify and measure the difference?
 	\item Why do Uni-directional LSTM and local model also work in some cases? 
 \end{itemize}
 
@@ -291,12 +256,27 @@ To answer first question, we conduct the experiments with Bi-LSTM, Uni-direction
 
 To answer the second question, we use the LSTM decomposition technique to further investigate the contribution distribution for the token level prediction. The decomposition is conducted for Bi-LSTM and Uni-directional LSTM. 
 
-To answer the third question, we leverage visualization techniques such as t-SNE~\cite{maaten2008visualizing}, to visualize the hidden vectors.
+To answer the third question, we leverage visualization techniques such as t-SNE~\cite{maaten2008visualizing}, to visualize the hidden vectors together with initial embedding vectors.
+
+%formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
+
+\section{Experimental Setup}
+
+%We conduct extensive experiments to answer the question: What do the Bi-LSTM learn? 
+
+\subsection{Dataset} 
+
+Our experiments are conducted based on OntoNotes 5 English dataset~\cite{weischedel2012ontonotes}, focusing on Entity Detection task. The Entity Detection task is usually formulated as a sequence labeling task: labels are assigned to each token. Different tagging scheme can be adopted, such as \textit{BIO}, \textit{BIOES}, etc. For simplification, in this work, we use \textit{IO} scheme: if the token is a part of entity, it will be annotated as \textbf{I}; otherwise, it will be annotated as \textbf{O}. One special case that this tagging scheme can not handle is that two entity appear consecutively in one sentence, because there is not boundary label such \textbf{B}~(begin of entity). So in our experiments, we remove the sentences with consecutive entities for further experiments. The performance is evaluated by Precision, Recall and F1 scores.
+
+\subsection{Hyper-parameters}
+
+
+\subsection{Setup}
+% move to last subsection of section Main
 
 \section{Results}
 
 We demonstrate our results regarding different questions we are trying to answer. 
-
 
 \subsection{Question 1}
 
@@ -324,18 +304,18 @@ The experiment results are shown in Table~\ref{res:ner}. Compare the effectivene
 %{'EOETrue': 823, 'EOEFalse': 214, 'OEOTrue': 239, 'OEOFalse': 117}
 \begin{table}[t]
 \centering\centering\resizebox{\columnwidth}{!}{
-\begin{tabular}{llp{10cm}}
+\begin{tabular}{lllp{8cm}}
 \hline\hline
-category		& number	&examples \\
-OEOTrue		&14		& For \textbf{more} information check out : www.taconet.com.tw/cstudio/\\
-OEOFalse		&10		& Dr. Konan Peck , an assistant research fellow at Academia Sinica 's Institute of Biomedical Sciences -LRB- IBMS -RRB- , says that \textbf{biochips} need to be made more widely available as a molecular biology research tool .\\
-EOETrue		&38		& In \textbf{the} first quarter of this year , the development of Guangzhou 's privately owned enterprises again showed many characteristics : all walks of life are developing extensively , and the development of industry and commerce is remarkable .\\
-EOEFalse		&13		& \textbf{Guofang} Shen said that this bill is a bill carrying political discrimination and extremely unfriendly to China .\\
+Category		&Total \# case 	& Sample \# case	&examples \\
+OEOTrue		& 239		&14		& For \textbf{more} information check out : www.taconet.com.tw/cstudio/\\
+OEOFalse		& 117		&10		& Dr. Konan Peck , an assistant research fellow at Academia Sinica 's Institute of Biomedical Sciences -LRB- IBMS -RRB- , says that \textbf{biochips} need to be made more widely available as a molecular biology research tool .\\
+EOETrue		& 823		&38		& In \textbf{the} first quarter of this year , the development of Guangzhou 's privately owned enterprises again showed many characteristics : all walks of life are developing extensively , and the development of industry and commerce is remarkable .\\
+EOEFalse		& 214		&13		& \textbf{Guofang} Shen said that this bill is a bill carrying political discrimination and extremely unfriendly to China .\\
 \hline
-Embedding	&2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
-False		& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
-Nearby 		& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
-Others		& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
+Embedding	& -			& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
+False		& -			& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
+Nearby 		& - 			& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
+Others		& - 			& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
 \hline
 \end{tabular}}
 \label{tab:bi-uni}
@@ -349,9 +329,9 @@ Further comparing the results of Bi-LSTM and MLP(bi), we can better understand t
 
 \begin{table}[t]
 \centering\centering\resizebox{\columnwidth}{!}{
-\begin{tabular}{llp{10cm}}
+\begin{tabular}{lllp{8cm}}
 \hline\hline
-category		& number	&examples \\
+category		&Total \# case 	& Sample \# case &examples \\
 OEOTrue		&14		& \textbf{Electrical} and high science and technology products grew considerably.\\
 OEOFalse		&47		& Another popular technique involves covering the trees with black \textbf{mosquito} nets to improve yields.\\
 EOETrue		&34		& David any reaction from the Bush team on the Democrats ' plan to contest the vote in Miami \textbf{-} Dade?\\
