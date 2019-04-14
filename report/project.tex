@@ -342,7 +342,37 @@ We can observe that with local model such as MLP(bi) or MLP(uni), the model can 
 
 We firstly classify the word into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In the following figures, red dots denote entity words and grey dots denote non-entity words. 
 
-We firstly decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. We can observe that most of the entity word and non-entity word are mix in the middle of the figures. 
+We decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. We can observe that most of the entity word and non-entity word are mix in the middle of the figures. 
+
+\begin{figure}[t]
+	\centering
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\linewidth]{bi_lstm_mlp_positive.pdf}
+		\caption{Bi-LSTM Embedding with entity word based on the prediction of MLP model}
+		\label{fig:bi_lstm_mlp_positive}
+	\end{subfigure}\hfil 
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\linewidth]{bi_lstm_mlp_negative.pdf}
+		\caption{Bi-LSTM Embedding with non-entity word based on the prediction of MLP model}
+		\label{fig:bi_lstm_mlp_negative}
+	\end{subfigure}
+\end{figure}
+
+\begin{figure}[t]
+	\centering
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\linewidth]{bi_lstm_gold_positive.pdf}
+		\caption{Bi-LSTM Embedding with entity word}
+		\label{fig:bi_lstm_gold_positive}
+	\end{subfigure}\hfil 
+	\begin{subfigure}{0.5\textwidth}
+		\includegraphics[width=\linewidth]{bi_lstm_gold_negative.pdf}
+		\caption{Bi-LSTM Embedding with non-entity word}
+		\label{fig:bi_lstm_gold_negative}
+	\end{subfigure}
+\end{figure}
+
+We further decompose 
 
 
 % We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
