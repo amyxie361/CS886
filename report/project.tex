@@ -153,7 +153,7 @@ As initial values, we define $c_n=h_n=0$. The only difference is that we have to
 
 \textbf{Bi-directional LSTM}
 
-According to previous researched[TODO], bi-directional LSTM will have better performance. So we also include a bi-directional implementation. The encoding is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. The probability distribution over $C$ classes is specified by $p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:t} [h_t^{fw}, h_t^{bw}]}}{\sum_{c = 1} ^ C e^{W_{:c} [h_t^{fw}, h_t^{bw}]}}$
+According to previous researched[TODO], bi-directional LSTM will have better performance. So we also include a bi-directional implementation. The encoding is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. The probability distribution over $C$ classes is specified by $p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:t} [h_t^{fw}, h_t^{bw}]}}{\sum_{c = 1} ^ C e^{W_{:c} [h_t^{fw}, h_t^{bw}]}}$, in which $[h_t^{fw}, h_t^{bw}]$ represents the concatenated matrix of $h_t^{fw}$ and $h_t^{bw}$.
 
 \textbf{MLP}
 
@@ -161,26 +161,23 @@ To examine what information has been learnt by LSTM from the context, we also im
 
 \subsection{Decomposition}
 
-
-
-
-\subsection{Decomposing the Output of a LSTM}
-\label{sec:decomposing}
-We now show that we can decompose the numerator of $p_i$ in Equation  \ref{eq:output_prob} into a product of factors, and interpret those factors as the contribution of individual words to the predicted probability of class $i$. Define 
+We now show that we can decompose the numerator of $p_{t, c}$ into a product of factors, and interpret those factors as the contribution of individual words of the predicted probability of class $i$. 
+Define 
 \begin{equation}\label{eq:beta} 
-\beta_{i,j} = \exp\left(W_i (o_T \odot (\tanh(c_j)- \tanh(c_{j-1}))\right),
+\beta_{t,c, j} = \exp\left(W_{:t} (o_T \odot (\tanh(c_j)- \tanh(c_{j-1}))\right),
 \end{equation}
- so that 
+so that 
 \[\exp( W_ih_T) = \exp\left(\sum_{j=1}^T W_i (o_T \odot (\tanh(c_j) - \tanh(c_{j-1}))\right) = \prod_{j=1}^T \beta_{i,j}.\]
 
- As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word $j$, so $\beta_{i,j}$ can be interpreted as the multiplicative contribution to $p_{i}$ by word $j$. 
-%\begin{align}
-%p_{t} & = \frac{\exp( Ph_t)_i}{\exp(W_ph_t) + \exp(W_ph_t)_2} \\
-%& = \frac{\exp(\sum_{j=1}^t W_p (o_t \odot (\tanh(c_j) - \tanh(c_{j-1})))_i}{C} \\
-%& = \frac{\prod_{j=1}^t \beta_{j, i}}{C}
-%\end{align}
+As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word $j$, so $\beta_{i,j}$ can be interpreted as the multiplicative contribution to $p_{i}$ by word $j$. 
+\begin{align}
+p_{t} & = \frac{\exp( Ph_t)_i}{\exp(W_ph_t) + \exp(W_ph_t)_2} \\
+& = \frac{\exp(\sum_{j=1}^t W_p (o_t \odot (\tanh(c_j) - \tanh(c_{j-1})))_i}{C} \\
+& = \frac{\prod_{j=1}^t \beta_{j, i}}{C}
+\end{align}
 \subsection{An Additive Decomposition of the LSTM cell}
-\label{sec:additive}
+
+
 We will show below that the $\beta_{i,j}$  capture some notion of the importance of a word to the LSTM's output.   However, these terms fail to account for how the information contributed by word $j$ is affected by the LSTM's forget gates between words $j$ and $T$. Consequently, we empirically found that the importance scores from this approach often yield a considerable amount of false positives. A more nuanced approach is obtained by considering the additive decomposition of $c_T$ in equation \eqref{eq:additive}, where each term $e_j$ can be interpreted as the contribution to the cell state $c_T$ by word $j$. By iterating the equation $c_t = f_tc_{t - 1} + i_t \tilde{c}_t$, we get that
 \begin{equation}
 c_T = \sum_{i=1}^T (\prod_{j=i + 1}^T f_j) i_i \tilde{c}_i = \sum_{i=1}^T e_{i, T} \label{eq:additive}
@@ -208,7 +205,9 @@ where $\beta_{i, j, k}$ denotes $\beta_{i, j}$ applied to document $k$.
 The numerator of $S_1$ denotes the average contribution of the phrase to the prediction of class 1 across all occurrences of the phrase. The denominator denotes the same statistic, but for class 2. Thus, if $S_1$ is high, then $w_1,...,w_k$ is a strong signal for class 1, and likewise for $S_2$. We propose to use $S$ as a score function in order to search for high scoring, representative, phrases which provide insight into the trained LSTM, and $C$ to denote the class corresponding to a phrase.
 
 In practice, the number of phrases is too large to feasibly compute the score of them all. Thus, we approximate a brute force search through a two step procedure. First, we construct a list of candidate phrases by searching for strings of consecutive words $j$ with importance scores $\beta_{i,j} > c$ for any $i$ and some threshold $c$; in the experiments below we use $c=1.1$. Then, we score and rank the set of candidate phrases, which is much smaller than the set of all phrases. 
+
 \subsection{Rules based classifier}
+
 The extracted patterns from Section \ref{sec:phrase_extraction} can be used to construct a simple, rules-based classifier which approximates the output of the original LSTM. Given a document and a list of patterns sorted by descending score given by $S$, the classifier sequentially searches for each pattern within the document using simple string matching. Once it finds a pattern, the classifier returns the associated class given by $C$, ignoring the lower ranked patterns. The resulting classifier is interpretable,  and despite its simplicity,  retains much of the accuracy of the LSTM used to build it.
 
 
@@ -224,6 +223,28 @@ We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong K
 %What is the best technique, in terms of what?
 %Is any technique good enough to declare the problem solved?
  
+\section{Results}
+
+\begin{table}[t]
+\centering\centering\resizebox{\columnwidth}{!}{
+\begin{tabular}{lll}
+\hline\hline
+category		& number	&examples \\
+OEOTrue		&14		& \textbf{Electrical} and high science and technology products grew considerably .\\
+OEOFalse		&47		& Another popular technique involves covering the trees with black \textbf{mosquito} nets to improve yields .\\
+EOETrue		&34		& David any reaction from the Bush team on the Democrats ' plan to contest the vote in Miami \textbf{-} Dade ?\\
+EOEFalse		&0		&\\
+\hline
+Embedding	&13		&  \textbf{Consumer} activists are skeptical . \\
+False		& 46		& I forced myself to refrain from the grief of \textbf{loosing} my beloved car -LRB- mine was liability - only coverage -RRB- and asked the friend to send their family home .\\
+Inner 		& 20		& It says that what \textbf{the} North Koreans did was a threat to international peace and security /.\\
+Others		& 16		& It achieved a total volume of 4 billion US dollars of goods going into and out of the area , increasing by 83 \% over \textbf{the same period of the previous} year , with a total amount of 1 billion US dollars from imports and exports .\\
+\hline
+\end{tabular}}
+\label{tab:example}
+\caption{TODO.}
+\end{table}
+
 \section{Conclusion}
 %Can your new technique effectively tackle the problem?
 %What future research do you recommend?
