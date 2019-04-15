@@ -380,72 +380,79 @@ In question 1, we have empirically shown that the LSTM model could perform signi
 
 \subsection{Word Embedding give much contribution.}
 
-To examine the source of effectiveness of LSTM, we conducted an experiment that randomly masks the entities in test data. To eliminate the affect of word embedding and measure the contribution from context, we mask the entities to be ``[$<$UNK$>$]''. The results can be found in \ref{tab:mask}
+\noindent \textbf{A Motivating Example} 
+
+To examine the source of effectiveness of LSTM, we conduct an experiment where the entities are randomly masked in test set. To eliminate the effect of word embedding and to measure the contribution from context, we mask the entities to ``$<$UNK$>$''. The results are shown in \ref{tab:mask}.
+
 \begin{table}[t]
 	\centering
 	\begin{tabular}{l@{\qquad}ccc}
 		\toprule
 		\textbf{Model}		& \textbf{Precision}	& \textbf{Recall}	& \textbf{F1} \\ \midrule
-		Bi-LSTM 		 	&  84.82 			& 83.60  			& 84.20 \\
-		Uni-LSTM-forward 	& 72.47 			& 73.88 			& 73.17 \\
-		Uni-LSTM-backward & 80.31 			& 80.28 			& 80.29 \\ \midrule
-		Bi-LSTM-masked 	& 64.53 			& 33.74			& 44.31 \\ 
-		Uni-LSTM-forward-masked & 67.01 		& 27.98 			& 39.48 \\ 
+		Bi-LSTM-masked 	& 64.53~(-20.29) 			& 33.74~(49.86)			& 44.31~(-39.89) \\ 
+		Uni-LSTM-forward-masked & 67.01~(-5.46) 		& 27.98~(-45.90) 			& 39.48~(-33.69) \\ 
 		Uni-LSTM-backward-masked& - 		& -				& - \\ 
 		\bottomrule
 	\end{tabular}
 	\vspace{3mm}
-	\caption{Entity Detection performance comparison between original and masked OntoNotes 5 English Dataset Test set.}
+	\caption{Entity Detection performance on masked OntoNotes 5 English Dataset Test set. The numbers in bracket denote the performance degradation compared with the corresponding models.}
 	\label{tab:mask}
 \end{table}
 
-We can see that after masking the entities to be ``[$<$UNK$>$]'', the recall drop dramatically. This means LSTM fails to detect entities without the embedding information from the word itself. This give us the idea that most effectiveness of sequence tagging may come from the word embedding. So we further analysis the embedding using MLP models.
+We can find that the recall drop dramatically after masking the entities to ``$<$UNK$>$''. This means that LSTM fails to detect entities without the embedding information from the word itself. This give us the idea that most effectiveness of sequence tagging may come from the word embedding. So we further analysis the embedding using visualization techniques.
+
+\noindent \textbf{Analysis}
 
 \begin{figure}[t]
 	\centering
-	\begin{subfigure}{0.24\textwidth}
-		\includegraphics[width=\linewidth]{glove_embedding_positive.pdf}
+	\begin{subfigure}[t]{0.24\textwidth}
+		\includegraphics[width=\linewidth]{glove_embedding_positive_mirror.pdf}
 		\caption{Glove Embedding with entity word}
 		\label{fig:glove_positive}
-	\end{subfigure}\hfil 
-	\begin{subfigure}{0.24\textwidth}
-		\includegraphics[width=\linewidth]{glove_embedding_negative.pdf}
+	\end{subfigure} \hfil 
+	\begin{subfigure}[t]{0.24\textwidth}
+		\includegraphics[width=\linewidth]{bi_lstm_gold_positive.pdf}
+		\caption{Bi-LSTM Embedding with entity word}
+		\label{fig:bi_lstm_gold_positive}
+	\end{subfigure} \hfil 
+	 \begin{subfigure}[t]{0.24\textwidth}
+		\includegraphics[width=\linewidth]{bi_lstm_mlp_positive.pdf}
+		\caption{Bi-LSTM Embedding with entity word based on the prediction of MLP model}
+		\label{fig:bi_lstm_mlp_positive}
+	\end{subfigure}
+
+	\bigskip
+	
+	\begin{subfigure}[t]{0.24\textwidth}
+		\includegraphics[width=\linewidth]{glove_embedding_negative_mirror.pdf}
 		\caption{Glove Embedding with non-entity word}
 		\label{fig:glove_negative}
-	\end{subfigure}\hfil
-	\begin{subfigure}{0.24\textwidth}
-	\includegraphics[width=\linewidth]{bi_lstm_gold_positive.pdf}
-	\caption{Bi-LSTM Embedding with entity word}
-	\label{fig:bi_lstm_gold_positive}
-\end{subfigure}\hfil 
-\begin{subfigure}{0.24\textwidth}
-	\includegraphics[width=\linewidth]{bi_lstm_gold_negative.pdf}
-	\caption{Bi-LSTM Embedding with non-entity word}
-	\label{fig:bi_lstm_gold_negative}
-\end{subfigure}
-\bigskip
-\begin{subfigure}{0.24\textwidth}
-	\includegraphics[width=\linewidth]{bi_lstm_mlp_positive.pdf}
-	\caption{Bi-LSTM Embedding with entity word based on the prediction of MLP model}
-	\label{fig:bi_lstm_mlp_positive}
-\end{subfigure}\hfil 
-\begin{subfigure}{0.24\textwidth}
-	\includegraphics[width=\linewidth]{bi_lstm_mlp_negative.pdf}
-	\caption{Bi-LSTM Embedding with non-entity word based on the prediction of MLP model}
-	\label{fig:bi_lstm_mlp_negative}
-\end{subfigure}
-\caption{T-SNE for Word Embedding}
-\label{fig:embedding}
+	\end{subfigure} \hfil
+   \begin{subfigure}[t]{0.24\textwidth}
+	   \includegraphics[width=\linewidth]{bi_lstm_gold_negative.pdf}
+	   \caption{Bi-LSTM Embedding with non-entity word}
+	   \label{fig:bi_lstm_gold_negative}
+   \end{subfigure} \hfil
+	\begin{subfigure}[t]{0.24\textwidth}
+		\includegraphics[width=\linewidth]{bi_lstm_mlp_negative.pdf}
+		\caption{Bi-LSTM Embedding with non-entity word based on the prediction of MLP model}
+		\label{fig:bi_lstm_mlp_negative}
+	\end{subfigure}
+	\caption{T-SNE for Word Embedding}
+	\label{fig:embedding}
 \end{figure}
 
-We can observe that with local model such as MLP(bi) or MLP(uni), the model can also achieve reasonable performance. More than 60 F1 score can be obtained by simple local model. %In this subsection, we are trying to investigate the reason behind this, mainly focusing on the embedding level. 
+We can observe that with local model such as MLP, the model can also achieve reasonable performance. More than 60 F1 score can be obtained by simple local model, as shown in Table~\ref{res:ner}. %In this subsection, we are trying to investigate the reason behind this, mainly focusing on the embedding level. 
 
-We firstly classify the words into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In \ref{fig:embedding}, red dots denote entity words and grey dots denote non-entity words. 
+To further investigate the underlying rationals, we conduct the following analysis: we firstly classify the words into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). Then we leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In \ref{fig:embedding}, red dots denote entity words and grey dots denote non-entity words. 
 
-We decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. With these two figures, we can observe that the GloVe embeddings indeed contain some entity-related information, because we can observe that the entity-word distribution is not same as non-entity-word distribution. But we still can find that most of the entity word and non-entity word are mix in the middle of the figures. 
+Here, we decompose two sets of embeddings: original GloVe embeddings, embeddings learned from the BiLSTM.
+
+The decomposition of the original GloVe embedding is shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. With these two figures, we can find that the GloVe embeddings indeed contain some entity-related information, because we can observe that the entity-words somehow group in the left side and non-entity-words distribute on right side. But we still can find that most of the entity words and non-entity words are mixed in the middle of the figure. 
 
 We further decompose the embeddings learned from the BiLSTM model, as shown in Figure~\ref{fig:bi_lstm_gold_positive} and Figure~\ref{fig:bi_lstm_gold_negative}. Compared with the figures from GloVe embeddings, we can observe that the entity-words are clustered tighter in Bi-LSTM based embeddings. This phenomenon indicates that the training process optimize the embeddings representation.
 
+In Figure~\ref{fig:bi_lstm_mlp_positive} and Figure~\ref{fig:bi_lstm_mlp_negative}, based on the decomposition of learned Bi-LSTM embeddings, we assign each dot with the color based on the predictions of MLP(bi): If MLP(bi) predict a word as a part of entity, then that corresponding dot will be colored with red; otherwise, grey will be assigned to that dot. The can find that the MLP(bi) can distinguish 84.95\% of the entity-words from non-entity-words. This proves that the idea that the embeddings indeed contribute significantly on Named Entity Detection task.
 
 %Compare empirically the techniques for complexity, performance, ease of use, etc.
 %Analyze and compare (empirically or theoretically) your new approach to existing approaches
