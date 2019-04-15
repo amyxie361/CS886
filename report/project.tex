@@ -78,7 +78,7 @@
 
 \begin{abstract}
 
-Put here a brief summary of the project: what is it about, what are the related works, what is your execution plan, what do you expect to learn/contribute, and how are you going to evaluate your results. The proposal is expected to be 1 page (reference excluded), so be concise and to the point. 
+LSTM is widely used in Natural Language Processing~(NLP) area and is treated as a contextual encoder and a fundamental block of complicated models. Usually, LSTM is regarded as an black box and people contribute the effectiveness source to context learning ability. In this paper, we are trying to understand and rationalize the behaviors and predictions of LSTM. Based on Entity Detection task, by proposing a token-level contextual decomposition method, we investigate the effectiveness sources of the LSTM models. With the help embedding visualization technique, we also show that embeddings also make a major contribution towards the model effectiveness.
 
 \end{abstract}
 
@@ -339,10 +339,10 @@ The detailed statistics is shown in Table~\ref{res:ner_error}.
 \toprule
 \textbf{Category}	& \textbf{Counts}	&\textbf{Examples} \\ \midrule
 
-Form					& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
-OOV					& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
-Nearby			& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
-Others  		& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
+\textbf{Capitalization}					& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
+\textbf{OOV}					& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
+\textbf{Missing Context	}		& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
+\textbf{Others}  		& 9		&  - \\%And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
 
 \bottomrule
 \end{tabular}}
@@ -358,10 +358,10 @@ Others  		& 9		&And although Pennsylvania and Massachusetts suffered slight decl
 			\toprule
 			\textbf{Category}	& \textbf{Counts}	&\textbf{Examples} \\ \midrule
 			
-			Embedding	&13		&  \textbf{Consumer} activists are skeptical. \\
-			False	& 46		& I forced myself to refrain from the grief of \textbf{loosing} my beloved car -LRB- mine was liability - only coverage -RRB- and asked the friend to send their family home.\\
-			Inner 	& 20		& It says that what \textbf{the} North Koreans did was a threat to international peace and security.\\
-			Others	& 16		& It achieved a total volume of 4 billion US dollars of goods going into and out of the area , increasing by 83 \% over \textbf{the same period of the previous} year , with a total amount of 1 billion US dollars from imports and exports.\\
+			\textbf{Capitalization}	&13		&  \textbf{Consumer} activists are skeptical. \\
+			\textbf{OOV}	& 46		& I forced myself to refrain from the grief of \textbf{loosing} my beloved car -LRB- mine was liability - only coverage -RRB- and asked the friend to send their family home.\\
+			\textbf{Missing Context }	& 20		& It says that what \textbf{the} North Koreans did was a threat to international peace and security.\\
+			\textbf{Others}	& 16		&  - \\% It achieved a total volume of 4 billion US dollars of goods going into and out of the area , increasing by 83 \% over \textbf{the same period of the previous} year , with a total amount of 1 billion US dollars from imports and exports.\\
 			\bottomrule
 	\end{tabular}}
 	\vspace{3mm}
