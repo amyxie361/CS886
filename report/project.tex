@@ -274,7 +274,7 @@ Our experiments are conducted based on OntoNotes 5 English dataset~\cite{weische
 
 \section{Results}
 
-We demonstrate our results regarding different questions we are trying to answer. 
+We demonstrate our results regarding different questions we are trying to answer. Here, Uni-LSTM-forward denotes Uni-directional LSTM with forward direction; Uni-LSTM-backward has similar meanings. MLP(glove) denotes the MLP model trained with GloVe embeddings which are finetued during the learning process. MLP(bi) denotes the MLP model based on the embeddings in Bi-LSTM model. MLP(uni-forward) denotes the MLP model based on the embeddings in Uni-LSTM-forward model, and MLP(uni-backward) has similar meaning.
 
 \subsection{Question 1}
 
@@ -286,77 +286,101 @@ We demonstrate our results regarding different questions we are trying to answer
 		Bi-LSTM &  84.82 & 83.60  & 84.20 \\
 		Uni-LSTM-forward & 72.47 & 73.88 & 73.17 \\
 		Uni-LSTM-backward & 80.31 & 80.28 & 80.29 \\ \midrule
+		MLP(glove) & 60.63 & 61.82 & 61.22 \\
 		MLP(bi) & 54.97 & 75.65 & 63.67 \\ 
 		MLP(uni-forward) & 60.80 & 61.75 &  61.27 \\ 
 		MLP(uni-backward) & 54.61 & 75.99 & 63.55 \\ 
 		\bottomrule
 	\end{tabular}
 	\vspace{3mm}
-	\caption{Entity Detection performance on OntoNotes 5 English Dataset Test set. Uni-LSTM denotes the Uni-directional LSTM. MLP(bi) denotes the MLP model based on the Bi-LSTM embeddings. MLP(uni) denotes the MLP model based on Uni-directional LSTM embeddings.}
+	\caption{Entity Detection performance on OntoNotes 5 English Dataset Test set. }
 	\label{res:ner}
 \end{table}
 
 
-\noindent \textbf{Bi-LSTM v.s. Uni-LSTM}
+
+The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM-forward model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. However, we can observe that the Uni-LSTM-backward perform significantly better than the Uni-LSTM-forward, with large margin(+7.12), and approaching the effectiveness of Bi-LSTM.
+
+For the group of MLP models, we can find that they have similar performance~(around 60 F1 scores).Using the embeddings learned from the LSTM models does not provide to much gains on the effectiveness when comparing their performance with MLP(glove). Further comparing the results of Bi-LSTM and MLP(bi), we can better understand the gains brought by the Bi-LSTM contextual encoding layer. Even leveraging the embeddings learned in Bi-LSTM model, the fine-tune MLP model still falls far behind the Bi-LSTM model. This comparison proves that the Bi-LSTM indeed empowers the entity detection ability. 
+
+In order to quantify the errors that Uni-LSTM or MLP makes, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM or MLP fails, and further categorize them into 4 types, as discussed below.
 
 
-The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, and further categorize them into \red{n} types, as shown in \ref{}.
-%{'EOETrue': 823, 'EOEFalse': 214, 'OEOTrue': 239, 'OEOFalse': 117}
+\begin{itemize}
+	\item \textbf{Type A}: Wrongly predicting in-vocabulary words as entity. For example,\textit{ For \textbf{more} information check out : www.taconet.com.tw/cstudio/.} The model falsely predicts \textbf{more} as entity.
+	\item \textbf{Type B}: Wrongly predicting out-of-vocabulary words as entity. For example, \textit{Another popular technique involves covering the trees with black \textbf{mosquito} nets to improve yields.} The model falsely predicts \textbf{mosquito} as entity while it is an out-of-vocabulary word.
+	\item \textbf{Type C}: Failed to predict in-vocabulary words as entity. For example, \textit{Qichen Qian expressed welcome over the visit by vice \textbf{Foreign} Affairs Minister Kamyao and the political consultations in progress}. The model miss to predict an in-vocabulary word \textit{Foreign} as a part of entity.
+	\item \textbf{Type D}: Failed to predict out-of-vocabulary words as entity. For example, \textit{\textbf{Guofang} Shen said that this bill is a bill carrying political discrimination and extremely unfriendly to China}. The model miss to predict an out-of-vocabulary word \textbf{Guofang} as a part of entity.
+\end{itemize}
+
 \begin{table}[t]
+	\centering
+	\begin{tabular}{l@{\qquad}cccc}
+		\toprule
+		\textbf{Model}         & Type A & Type B & Type C & Type D \\ \midrule
+		uni-LSTM-forward &  239  & 117 & 823 & 214 \\
+		uni-LSTM-backward & xxx & xxx & xxx & xxx  \\
+		MLP(bi) & 418 & 1675 & 1363 & 0  \\ 
+		\bottomrule
+	\end{tabular}
+	\vspace{3mm}
+	\caption{Error Analysis }
+	\label{res:ner_error}
+\end{table}
+
+
+The detailed statistics is shown in Table~\ref{res:ner_error}. 
+
+
+\begin{table}[t]
+\small
 \centering\centering\resizebox{\columnwidth}{!}{
-\begin{tabular}{lllp{8cm}}
-\hline\hline
+\begin{tabular}{llp{7cm}}
+\toprule
+Category	& Sample \# case	&examples \\ \midrule
 
-Category			&Total \# case 	& Sample \# case	&examples \\
-Ordinary-Vocab		& 239		&14		& For \textbf{more} information check out : www.taconet.com.tw/cstudio/\\
-Ordinary-OOV		& 117		&10		& Dr. Konan Peck , an assistant research fellow at Academia Sinica 's Institute of Biomedical Sciences -LRB- IBMS -RRB- , says that \textbf{biochips} need to be made more widely available as a molecular biology research tool .\\
-Entity-Vocab		& 823		&38		& In \textbf{the} first quarter of this year , the development of Guangzhou 's privately owned enterprises again showed many characteristics : all walks of life are developing extensively , and the development of industry and commerce is remarkable .\\
-Entity-OOV		& 214		&13		& \textbf{Guofang} Shen said that this bill is a bill carrying political discrimination and extremely unfriendly to China .\\
-\hline
-Form				& -			& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
-OOV				& -			& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
-Nearby 			& - 			& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
-Others			& - 			& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
+Form					& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
+OOV					& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
+Nearby			& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
+Others  		& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
 
-\hline
+\bottomrule
 \end{tabular}}
+\vspace{3mm}
 \label{tab:bi-uni}
 \caption{Statistic of Bi-LSTM and uni-LSTM comparison.}
 \end{table}
 
-In table \ref{tab:bi-uni}, Ordinary means the target token is a non-entity in golden label while Entity means it is an entity. Vocab means the token is in the Glove vocabulary while OOV means it is not. We categorize the error into four cases. 
+\begin{table}[t]
+	\small
+	\centering\centering\resizebox{\columnwidth}{!}{
+		\begin{tabular}{llp{7cm}}
+			\toprule
+			Category	& Sample \# case	&examples \\ \midrule
+			
+			Embedding	&13		&  \textbf{Consumer} activists are skeptical. \\
+			False	& 46		& I forced myself to refrain from the grief of \textbf{loosing} my beloved car -LRB- mine was liability - only coverage -RRB- and asked the friend to send their family home.\\
+			Inner 	& 20		& It says that what \textbf{the} North Koreans did was a threat to international peace and security.\\
+			Others	& 16		& It achieved a total volume of 4 billion US dollars of goods going into and out of the area , increasing by 83 \% over \textbf{the same period of the previous} year , with a total amount of 1 billion US dollars from imports and exports.\\
+			\bottomrule
+	\end{tabular}}
+	\vspace{3mm}
+	\label{tab:bi-mlp}
+	\caption{Statistic of Bi-LSTM and MLP comparison.}
+\end{table}
+
+We also sample 50 sentences from the pool where Bi-LSTM makes correct predictions while uni-LSTM-forward makes wrong predictions, to further examine the error sources. For MLP model, we also sample 50 sentences for error analysis.
+
+We categorize the error sources into 4 types, as shown below.
 
 \begin{itemize}
 	\item Form: in some cases, words will be in different form. For example, the first character of the first word will be capitalized. Since Glove is a case sensitive embedding, the two form will have different embedding vectors, which will lead to difference in inference phrase. 
 	\item OOV: some words are not in the Glove vocabulary TODO
 \end{itemize}
 
-\noindent \textbf{Bi-LSTM v.s. MLP(bi)}
-
-Further comparing the results of Bi-LSTM and MLP(bi), we can better understand the gains brought by the Bi-LSTM contextual encoding layer. Even leveraging the embeddings learned in Bi-LSTM model, the fine-tune MLP model still falls far behind the Bi-LSTM model. This comparison proves that the Bi-LSTM indeed empowers the entity detection ability. Further error analysis is shown in \red{tab:bi-mlp}.
-
-\begin{table}[t]
-\centering\centering\resizebox{\columnwidth}{!}{
-\begin{tabular}{lllp{8cm}}
-\hline\hline
-category		&Total \# case 	& Sample \# case &examples \\
-OEOTrue		& 418	&14		& \textbf{Electrical} and high science and technology products grew considerably.\\
-OEOFalse		&1675	&47		& Another popular technique involves covering the trees with black \textbf{mosquito} nets to improve yields.\\
-EOETrue		& 1363	&34		& David any reaction from the Bush team on the Democrats ' plan to contest the vote in Miami \textbf{-} Dade?\\
-EOEFalse		& 0		&0		& - \\
-\hline
-Embedding	& - 	&13		&  \textbf{Consumer} activists are skeptical. \\
-False		& - 	& 46		& I forced myself to refrain from the grief of \textbf{loosing} my beloved car -LRB- mine was liability - only coverage -RRB- and asked the friend to send their family home.\\
-Inner 		& -	& 20		& It says that what \textbf{the} North Koreans did was a threat to international peace and security.\\
-Others		&-	& 16		& It achieved a total volume of 4 billion US dollars of goods going into and out of the area , increasing by 83 \% over \textbf{the same period of the previous} year , with a total amount of 1 billion US dollars from imports and exports.\\
-\hline
-\end{tabular}}
-\label{tab:bi-mlp}
-\caption{Statistic of Bi-LSTM and MLP comparison.}
-\end{table}
 
 
-\noindent \textbf{Uni-LSTM v.s. MLP(uni)}
+
 
 
 
