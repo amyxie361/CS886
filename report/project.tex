@@ -49,7 +49,6 @@
 
 \newcommand{\red}[1]{\textcolor{red}{#1}}
 
-
 \title{What does LSTM learn? Contextual Decomposition for Rationalizing LSTM Predictions}
 
 \author{
@@ -154,9 +153,9 @@ h_t & = o_t \odot \tanh(c_t)\label{eq:1h}
 As initial values, we define $c_0=h_0=0$. 
 Then the probability distribution for the $t$ th token for the $c$ th class is specified by 
 \begin{equation}
-p_{t, c} = \text{SoftMax}(W h_t) = \frac{e^{W_{:c} h_t}}{\sum_{j = 1} ^ C e^{W_{:j} h_t}},
+p_{t, c} = \text{SoftMax}(W h_t + b) = \frac{e^{W_{:c} h_t + b_{:c}}}{\sum_{j = 1} ^ C e^{W_{:j} h_t + b_{:j}}},
 \end{equation}
-where $W_{:j}$ is the $i$ th row of the matrix $W$.
+where $W_{:j}$ is the $i$ th row of the matrix $W$ and $b_{:j}$ is the bias of the $i$ th.
 
 This is the forward directional LSTM. In this case, the information is passed from the beginning of the sentence to the end. We also consider the backward directional LSTM for later comparison. The only difference will be the update direction and the initial value. The initial values are assigned to $c_n=h_n=0$. And the information is passed from the end of the sentence to the beginning, which means we update the $t$ th token using the $t+1$ th token instead of the $t-1$ th as in the forward version.
 %\begin{align}
@@ -302,16 +301,16 @@ The experiment results are shown in Table~\ref{res:ner}. Compare the effectivene
 \centering\centering\resizebox{\columnwidth}{!}{
 \begin{tabular}{lllp{8cm}}
 \hline\hline
-Category		&Total \# case 	& Sample \# case	&examples \\
+Category			&Total \# case 	& Sample \# case	&examples \\
 Ordinary-Vocab		& 239		&14		& For \textbf{more} information check out : www.taconet.com.tw/cstudio/\\
 Ordinary-OOV		& 117		&10		& Dr. Konan Peck , an assistant research fellow at Academia Sinica 's Institute of Biomedical Sciences -LRB- IBMS -RRB- , says that \textbf{biochips} need to be made more widely available as a molecular biology research tool .\\
 Entity-Vocab		& 823		&38		& In \textbf{the} first quarter of this year , the development of Guangzhou 's privately owned enterprises again showed many characteristics : all walks of life are developing extensively , and the development of industry and commerce is remarkable .\\
 Entity-OOV		& 214		&13		& \textbf{Guofang} Shen said that this bill is a bill carrying political discrimination and extremely unfriendly to China .\\
 \hline
-Form	& -			& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
-OOV		& -			& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
-Nearby 		& - 			& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
-Others		& - 			& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
+Form				& -			& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
+OOV				& -			& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
+Nearby 			& - 			& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
+Others			& - 			& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
 \hline
 \end{tabular}}
 \label{tab:bi-uni}
@@ -319,10 +318,11 @@ Others		& - 			& 9		&And although Pennsylvania and Massachusetts suffered slight
 \end{table}
 
 In table \ref{tab:bi-uni}, Ordinary means the target token is a non-entity in golden label while Entity means it is an entity. Vocab means the token is in the Glove vocabulary while OOV means it is not. We categorize the error into four cases. 
-\begin{itemize}
-	\item Form: in some cases, words will be in different form. For example, the first character of the first word will be capitalized. Since Glove is a case sensitive embedding, the two form will have different embedding vectors, which will lead to difference in inference phrase. The 
-	\item OOV: some 
 
+\begin{itemize}
+	\item Form: in some cases, words will be in different form. For example, the first character of the first word will be capitalized. Since Glove is a case sensitive embedding, the two form will have different embedding vectors, which will lead to difference in inference phrase. 
+	\item OOV: some words are not in the Glove vocabulary
+\end{itemize}
 
 
 \noindent \textbf{Bi-LSTM v.s. MLP(bi)}
