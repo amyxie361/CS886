@@ -69,6 +69,13 @@
 \maketitle
 % expect the report to be less than \textbf{8 pages} (references excluded).
 
+%TODO
+% introduction refine
+% related work, conclusion
+% question 2 find examples to draw plot
+% mask uni-bw data
+% question 2 pattern extraction experiment 
+
 \begin{abstract}
 
 Put here a brief summary of the project: what is it about, what are the related works, what is your execution plan, what do you expect to learn/contribute, and how are you going to evaluate your results. The proposal is expected to be 1 page (reference excluded), so be concise and to the point. 
@@ -266,9 +273,9 @@ Our experiments are conducted based on OntoNotes 5 English dataset~\cite{weische
 
 \section{Results}
 
-We demonstrate our results regarding different questions we are trying to answer. Here, Uni-LSTM-forward denotes Uni-directional LSTM with forward direction; Uni-LSTM-backward has similar meanings. MLP(glove) denotes the MLP model trained with GloVe embeddings which are finetued during the learning process. MLP(bi) denotes the MLP model based on the embeddings in Bi-LSTM model. MLP(uni-forward) denotes the MLP model based on the embeddings in Uni-LSTM-forward model, and MLP(uni-backward) has similar meaning.
+We demonstrate our results regarding different questions we are trying to answer. Here, Uni-LSTM-forward denotes Uni-directional LSTM with forward direction; Uni-LSTM-backward has similar meanings. MLP(glove) denotes the MLP model trained with GloVe embeddings which are finetuned during the learning process. MLP(bi) denotes the MLP model based on the embeddings in Bi-LSTM model. MLP(uni-forward) denotes the MLP model based on the embeddings in Uni-LSTM-forward model, and MLP(uni-backward) has similar meaning.
 
-\subsection{Question 1}
+\subsection{Bi-LSTM is better.}
 
 \begin{table}[t]
 	\centering
@@ -312,7 +319,7 @@ In order to quantify the errors that Uni-LSTM or MLP makes, we conduct further e
 		\toprule
 		\textbf{Model}         & Type A & Type B & Type C & Type D \\ \midrule
 		uni-LSTM-forward &  239  & 117 & 823 & 214 \\
-		uni-LSTM-backward & xxx & xxx & xxx & xxx  \\
+		uni-LSTM-backward & 191 & 97 & 214 & 256  \\
 		MLP(bi) & 418 & 1675 & 1363 & 0  \\ 
 		\bottomrule
 	\end{tabular}
@@ -376,14 +383,14 @@ We categorize the error sources into 4 types, as shown below.
 The counts of each categories and their examples are shown in Table~\ref{tab:bi-uni} and Table~\ref{tab:bi-mlp}. Note that one sentence might have more than one error so the sum of the counts are larger than 50.
 
 
-\subsection{Question 2}
+\subsection{LSTM learns contextual information.}
 
 In question 1, we have empirically shown that the LSTM model could perform significantly better than local model, then we also want to show this in more theoretically way. With LSTM decomposition, we find that the LSTM can correct several errors made by local model such as MLP. 
 
 
 %OET  The interview did n't last long , just two hours and it was over .
 
-\subsection{Question 3}
+\subsection{Word Embedding gives much contribution.}
 
 \noindent \textbf{A Motivating Example} 
 
@@ -463,10 +470,6 @@ In Figure~\ref{fig:bi_lstm_mlp_positive} and Figure~\ref{fig:bi_lstm_mlp_negativ
 %Analyze and compare (empirically or theoretically) your new approach to existing approaches
 %What is the best technique, in terms of what?
 %Is any technique good enough to declare the problem solved?
- 
-\section{Results}
-
-
 
 \section{Conclusion}
 %Can your new technique effectively tackle the problem?
