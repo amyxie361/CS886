@@ -330,7 +330,7 @@ The detailed statistics is shown in Table~\ref{res:ner_error}.
 \centering\centering\resizebox{\columnwidth}{!}{
 \begin{tabular}{llp{7cm}}
 \toprule
-Category	& Sample \# case	&examples \\ \midrule
+\textbf{Category}	& \textbf{Counts}	&\textbf{Examples} \\ \midrule
 
 Form					& 2		& \textbf{Thick} fog , rain and high winds are limiting visibility at the site .  \\
 OOV					& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
@@ -340,8 +340,8 @@ Others  		& 9		&And although Pennsylvania and Massachusetts suffered slight decl
 \bottomrule
 \end{tabular}}
 \vspace{3mm}
+\caption{Statistic of error source of Uni-LSTM(forward) model.}
 \label{tab:bi-uni}
-\caption{Statistic of Bi-LSTM and Uni-LSTM comparison.}
 \end{table}
 
 \begin{table}[t]
@@ -349,7 +349,7 @@ Others  		& 9		&And although Pennsylvania and Massachusetts suffered slight decl
 	\centering\centering\resizebox{\columnwidth}{!}{
 		\begin{tabular}{llp{7cm}}
 			\toprule
-			Category	& Sample \# case	&examples \\ \midrule
+			\textbf{Category}	& \textbf{Counts}	&\textbf{Examples} \\ \midrule
 			
 			Embedding	&13		&  \textbf{Consumer} activists are skeptical. \\
 			False	& 46		& I forced myself to refrain from the grief of \textbf{loosing} my beloved car -LRB- mine was liability - only coverage -RRB- and asked the friend to send their family home.\\
@@ -358,8 +358,8 @@ Others  		& 9		&And although Pennsylvania and Massachusetts suffered slight decl
 			\bottomrule
 	\end{tabular}}
 	\vspace{3mm}
+	\caption{The statistics of error source of MLP(bi) model.}
 	\label{tab:bi-mlp}
-	\caption{Statistic of Bi-LSTM and MLP comparison.}
 \end{table}
 
 We also sample 50 sentences from the pool where Bi-LSTM makes correct predictions while uni-LSTM-forward makes wrong predictions, to further examine the error sources. For MLP model, we also sample 50 sentences for error analysis.
@@ -367,16 +367,13 @@ We also sample 50 sentences from the pool where Bi-LSTM makes correct prediction
 We categorize the error sources into 4 types, as shown below.
 
 \begin{itemize}
-	\item Form: in some cases, words will be in different form. For example, the first character of the first word will be capitalized. Since Glove is a case sensitive embedding, the two form will have different embedding vectors, which will lead to difference in inference phrase. 
-	\item OOV: some words are not in the Glove vocabulary TODO
+	\item \textbf{Capitalization}: Since Glove embedding is case-sensitive, a lowercased word and capitalized wordl have different embedding vectors, which lead to inference differences. 
+	\item \textbf{OOV}: Out of vocabulary~(OOV) words will be replaced by $<$UNK$>$ during the inference and totally determined by the context. The model will fail in some cases to correctly infer that word as a part of entity.
+	\item \textbf{Missing Context} The model fails to classify an in-vocabulary word as a part of entity because the model ignores the contextual information. 
+	\item \textbf{Other} Other error sources which are hard to determined are classified into this category.
 \end{itemize}
 
-
-
-
-
-
-
+The counts of each categories and their examples are shown in Table~\ref{tab:bi-uni} and Table~\ref{tab:bi-mlp}. Note that one sentence might have more than one error so the sum of the counts are larger than 50.
 
 
 \subsection{Question 2}
