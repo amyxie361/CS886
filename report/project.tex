@@ -138,11 +138,11 @@ Formally, we represent a sentence as a list of tokens $T = [t_1, t_2, ... , t_n]
 We implement several models to compare the contribution of both embedding information and contextual information to the final prediction. 
 
 
-\subsection{Uni-directional LSTM}
+\subsection{Uni-LSTM}
 
-We follow the traditional LSTM mechanism to construct a model for sequence tagging task. Given a sequence of word embeddings, $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d$, an uni-directional LSTM processes one word at a time, keeping track of cell-gates $C = [c_1, c_2, ... , c_n]$ and hidden states $H = [h_1, h_2, ... , h_n]$. After processing each token, the hidden state of current token is then passed through a fully-connected layer to form the probability distribution over classes. After a softmax activation function and argmax, the model will predict a label across classes.
+We follow the traditional LSTM mechanism to construct a model for sequence tagging task. Given a sequence of word embeddings, $E = [e_1, e_2, ... , e_n], e_i \in \mathbb{R}^d$, an Uni-LSTM processes one word at a time, keeping track of cell-gates $C = [c_1, c_2, ... , c_n]$ and hidden states $H = [h_1, h_2, ... , h_n]$. After processing each token, the hidden state of current token is then passed through a fully-connected layer to form the probability distribution over classes. After a softmax activation function and argmax, the model will predict a label across classes.
 
-In detail, each uni-LSTM cell computes $h_t$ and $c_t$ as a function of $e_t, c_{t-1}$ using the following updates. 
+In detail, each Uni-LSTM cell computes $h_t$ and $c_t$ as a function of $e_t, c_{t-1}$ using the following updates. 
 \begin{align} 
 f_t & = \sigma(W_f x_t + V_f h_{t - 1} + b_f) \label{eq:1f}\\
 i_t & = \sigma(W_i x_t + V_i h_{t - 1} + b_i) \label{eq:1i}\\
@@ -159,7 +159,7 @@ p_{t, c} = \text{SoftMax}(W h_t + b) = \frac{e^{W_{:c} h_t + b_{:c}}}{\sum_{j = 
 \end{equation}
 where $W_{:j}$ is the $i$ th row of the matrix $W$ and $b_{:j}$ is the bias of the $i$ th.
 
-This is the forward directional LSTM. In this case, the information is passed from the beginning of the sentence to the end. We also consider the backward directional LSTM for later comparison. The only difference will be the update direction and the initial value. The initial values are assigned to $c_n=h_n=0$. And the information is passed from the end of the sentence to the beginning, which means we update the $t$ th token using the $t+1$ th token instead of the $t-1$ th as in the forward version.
+This is the forward LSTM. In this case, the information is passed from the beginning of the sentence to the end. We also consider the backward LSTM for later comparison. The only difference will be the update direction and the initial value. The initial values are assigned to $c_n=h_n=0$. And the information is passed from the end of the sentence to the beginning, which means we update the $t$ th token using the $t+1$ th token instead of the $t-1$ th as in the forward version.
 %\begin{align}
 %f_t & = \sigma(W_f x_t + V_f h_{t + 1} + b_f) \\
 %i_t & = \sigma(W_i x_t + V_i h_{t + 1} + b_i) \\
@@ -170,13 +170,13 @@ This is the forward directional LSTM. In this case, the information is passed fr
 %\end{align}
 
 
-\subsection{Bi-directional LSTM}
+\subsection{Bi-LSTM}
 
-Uni-directional LSTM networks suffer from only seeing information from one side of t he sentence. So we also include a bi-directional LSTM to examine the information learnt from both sides. The encoding process is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. We also demote the concatenated matrix of $*_t^{fw}$ and $*_t^{bw}$ as $[*_t^{fw}, *_t^{bw}]$. After concatenate the forward and backward gates together, using $[*_t^{bw}, *_t^{fw}]$ to replace $*_t$ in formulas from \ref{eq:1f} to \ref{eq:1h}, we can represent the update formulas in a same form. 
+Uni-LSTM networks suffer from only seeing information from one side of t he sentence. So we also include a Bi-LSTM to examine the information learnt from both sides. The encoding process is just simply concatenate forward and backward gates together. We demote the forward gates as $f_t^{fw}, i_t^{fw}, o_t^{fw}, c_t^{fw}, h_t^{fw}$, and the backward gates as $f_t^{bw}, i_t^{bw}, o_t^{bw}, c_t^{bw}, h_t^{bw}$. We also demote the concatenated matrix of $*_t^{fw}$ and $*_t^{bw}$ as $[*_t^{fw}, *_t^{bw}]$. After concatenate the forward and backward gates together, using $[*_t^{bw}, *_t^{fw}]$ to replace $*_t$ in formulas from \ref{eq:1f} to \ref{eq:1h}, we can represent the update formulas in a same form. 
 
 Also probability distribution for the $t$ th token for the $c$ th class is specified by 
 \begin{equation}
-p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:c} [h_t^{fw}, h_t^{bw}]}}{\sum_{j = 1} ^ C e^{W_{:j} [h_t^{fw}, h_t^{bw}]}}.
+p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}] + b) = \frac{e^{W_{:c} [h_t^{fw}, h_t^{bw}] + b_{:c}}}{\sum_{j = 1} ^ C e^{W_{:j} [h_t^{fw}, h_t^{bw}] + b_{:j}}}.
 \end{equation}
 
 
@@ -185,13 +185,11 @@ p_{t, c} = \text{SoftMax}(W [h_t^{fw}, h_t^{bw}]) = \frac{e^{W_{:c} [h_t^{fw}, h
 To examine what information has been learnt by LSTM from the context and what information can be directly learned from the word embedding, we also implemented a m-layer MLP network to tag the tokens only according to the embeddings. Each MLP layer can be represented as follow:
 The input of the $i$ th layer is represented as $x_i$, then the $i$ th layer is $f_i(x_i) = \sigma(W_i x_i + b_i)$, where $W_i$ and $b_i$ are the weights and bias of the $i$ th layer. In this work we use ReLU as our activation function $\sigma$. Then the output of the $i$ th layer $f_i(x_i)$ is then feed into the next layer as input. That is to say $x_{i+1} = f_i(x_i)$. 
 
-We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward uni-directional LSTM and the bi-directional LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f_m(e_t))$.% explain more?
+We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward Uni-LSTM and the Bi-LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f_m(e_t))$.% explain more?
 
-\subsection{Decomposition}
+\subsection{Uni-LSTM Decomposition}
 
-\textbf{Uni-LSTM}
-
-We now show that we can decompose the numerator of $p_{t, c}$ into a product of factors, and interpret those factors as the contribution of individual words of the predicted probability of class $c$ for uni-LSTM. Also taking the forward direction as an example, define 
+We now show that we can decompose the numerator of $p_{t, c}$ into a product of factors, and interpret those factors as the contribution of individual words of the predicted probability of class $c$ for Uni-LSTM. Also taking the forward direction as an example, define 
 \begin{equation}\label{eq:uni-beta} 
 \beta_{t, c, j} = \exp\left(W_{:c} (o_t \odot (\tanh(c_j)- \tanh(c_{j-1}))\right),
 \end{equation}
@@ -200,12 +198,17 @@ so that
 
 As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word $j$, so $\beta_{t, c, j}$ can be interpreted as the multiplicative contribution to $p_{t, c}$ by word $j$. 
 
+Now, we have 
+\begin{equation}
+p_{t, c} \propto \exp( W_{:c} h_t + b_{:c}) = \exp(b_{:c})\prod_{j=1}^t \beta_{t, c, j}.
+\end{equation}
+
 This is a direct extension of [TODO]'s work, in which we expand their method to suit sequence tagging tasks.
 The backward direction will just be the same.
 
-\textbf{Bi-LSTM}
+\subsection{Bi-LSTM Decomposition}
 
-For the bi-directional LSTM decomposition, we can simply de-concatenate the gate states and compute the contribution of each direction as in the uni-direction version. Then each token's probability distribution can be taken as a combination of both direction. That is to say, the probability can be interpreted as follow:
+We also extend the decomposition for Bi-LSTM model. For Bi-LSTM, we can simply de-concatenate the gate states and compute the contribution of each direction as in the Uni-LSTM. Then each token's probability distribution can be taken as a combination of both direction. That is to say, the probability can be interpreted as follow:
 \begin{align}\label{eq:bi-beta} 
 \beta_{t, c, j} = \exp(&W_{:c} [h_t^{fw}, h_t^{bw}])\\
 = \exp(&W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw})- \tanh(c_{j-1}^{fw}))) \\
@@ -225,36 +228,28 @@ so that
 \end{equation}
 Then we have:
 \begin{align}
-	\exp(&W_{:c} [h_t^{fw}, h_t^{bw}]) \\
-= \exp(&\sum_{j=1}^t W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw}) - \tanh(c_{j-1}^{fw})))\\
+p_{t, c} \propto \exp(&W_{:c} [h_t^{fw}, h_t^{bw}] + b_{:c}) \\
+= \exp(&b_{:c} + \sum_{j=1}^t W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw}) - \tanh(c_{j-1}^{fw})))\\
 	+&\sum_{j=t}^n W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw}) - \tanh(c_{j+1}^{fw}))))\\
-= \prod_{j=1}^t &\beta_{t, c, j}^{fw} \prod_{j=t}^n \beta_{t, c, j}^{bw}.
+=  \exp(&b_{:c})\prod_{j=1}^t \beta_{t, c, j}^{fw} \prod_{j=t}^n \beta_{t, c, j}^{bw}.
 \end{align}
-
-\textbf{MLP}
-
-For MLP model, the probability distribution of each token only rely on it's own embedding and the weight vector in the network. So the contribution weight before softmax activation function can be written as: 
-\begin{equation}
-\beta_{t, c} = f_m(f_{m-1}(...f_1(e_t)))_{:c}
-\end{equation} 
-We consider all four kinds of embeddings for comparison.
 
 \section{Model Comparison}
 
-To investigate the problem: What does the Bi-LSTM learn, we decompose it into three small problems:
+For better understanding, we break down the problem of ``What does the Bi-LSTM learn'' into three small problems:
 
 \begin{itemize}
-	\item Does Bi-LSTM perform significantly better than Uni-directional LSTM and local models such as MLP? 
-	In what cases, Bi-LSTM, Uni-directional LSTM and local models work well or better than the other models?
+	\item Does Bi-LSTM perform significantly better than Uni-LSTM and local models such as MLP? 
+	In what cases, Bi-LSTM, Uni-LSTM and local models work well or better than the other models?
 	\item Does Bi-LSTM model learn to do prediction from contextual information? How to verify and measure the difference?
-	\item Why do Uni-directional LSTM and local model also work in some cases? 
+	\item Why do Uni-LSTM and local model also work in some cases? 
 \end{itemize}
 
-To answer first question, we conduct the experiments with Bi-LSTM, Uni-directional LSTM model. The embedding is initialized with GloVe pretraining embeddings~\cite{pennington2014glove}. To investigate what kind of information gain provided by the LSTM, we also conduct experiments with MLP. We adopt the fine-tuned embeddings in LSTM and fix them during the training of MLP model. This is known as probing technique. 
+To answer first question, we conduct the experiments with Bi-LSTM, Uni-LSTM model. The embedding is initialized with GloVe pretraining embeddings~\cite{pennington2014glove}. To investigate what kind of information gain provided by the LSTM, we also conduct experiments with MLP. We adopt the fine-tuned embeddings in LSTM and fix them during the training of MLP model. This is known as probing technique[TODO cite]. 
 
-To answer the second question, we use the LSTM decomposition technique to further investigate the contribution distribution for the token level prediction. The decomposition is conducted for Bi-LSTM and Uni-directional LSTM. 
+To answer the second question, we use the LSTM decomposition technique to further investigate the contribution distribution for the token level prediction. The decomposition is conducted for Bi-LSTM and Uni-LSTM. 
 
-To answer the third question, we leverage visualization techniques such as t-SNE~\cite{maaten2008visualizing}, to visualize the hidden vectors together with initial embedding vectors.
+To answer the third question, we leverage visualization techniques such as t-SNE~\cite{maaten2008visualizing}, to visualize the hidden vectors together with initial embedding vectors. T-SNE is a technique that can visualizes high-dimensional data by giving each datapoint a location in a two or three-dimensional map. The main idea is to first using mixture models to estimate the distribution of points and then minimize the KL-divergence between point distribution before and after the mapping.
 
 %formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
 
@@ -268,9 +263,6 @@ Our experiments are conducted based on OntoNotes 5 English dataset~\cite{weische
 
 \subsection{Hyper-parameters}
 
-
-\subsection{Setup}
-% move to last subsection of section Main
 
 \section{Results}
 
@@ -292,7 +284,7 @@ We demonstrate our results regarding different questions we are trying to answer
 		\bottomrule
 	\end{tabular}
 	\vspace{3mm}
-	\caption{Entity Detection performance on OntoNotes 5 English Dataset Test set. Uni-LSTM denotes the Uni-directional LSTM. MLP(bi) denotes the MLP model based on the Bi-LSTM embeddings. MLP(uni) denotes the MLP model based on Uni-directional LSTM embeddings.}
+	\caption{Entity Detection performance on OntoNotes 5 English Dataset Test set. Uni-LSTM denotes the Uni-LSTM. MLP(bi) denotes the MLP model based on the Bi-LSTM embeddings. MLP(uni) denotes the MLP model based on Uni-LSTM embeddings.}
 	\label{res:ner}
 \end{table}
 
@@ -321,7 +313,7 @@ Others			& - 			& 9		&And although Pennsylvania and Massachusetts suffered sligh
 \hline
 \end{tabular}}
 \label{tab:bi-uni}
-\caption{Statistic of Bi-LSTM and uni-LSTM comparison.}
+\caption{Statistic of Bi-LSTM and Uni-LSTM comparison.}
 \end{table}
 
 In table \ref{tab:bi-uni}, Ordinary means the target token is a non-entity in golden label while Entity means it is an entity. Vocab means the token is in the Glove vocabulary while OOV means it is not. We categorize the error into four cases. 
@@ -367,10 +359,30 @@ Others		&-	& 16		& It achieved a total volume of 4 billion US dollars of goods g
 In question 1, we have empirically shown that the LSTM model could perform significantly better than local model, then we also want to show this in more theoretically way. With LSTM decomposition, we find that the LSTM can correct several errors made by local model such as MLP. 
 
 
-
-
+%OET  The interview did n't last long , just two hours and it was over .
 
 \subsection{Question 3}
+
+To examine the source of effectiveness of LSTM, we conducted an experiment that randomly masks the entities in test data. To eliminate the affect of word embedding and measure the contribution from context, we mask the entities to be ``[$<$UNK$>$]''. The results can be found in \ref{tab:mask}
+\begin{table}[t]
+	\centering
+	\begin{tabular}{l@{\qquad}ccc}
+		\toprule
+		\textbf{Model}		& \textbf{Precision}	& \textbf{Recall}	& \textbf{F1} \\ \midrule
+		Bi-LSTM 		 	&  84.82 			& 83.60  			& 84.20 \\
+		Uni-LSTM-forward 	& 72.47 			& 73.88 			& 73.17 \\
+		Uni-LSTM-backward & 80.31 			& 80.28 			& 80.29 \\ \midrule
+		Bi-LSTM-masked 	& 64.53 			& 33.74			& 44.31 \\ 
+		Uni-LSTM-forward-masked & 67.01 		& 27.98 			& 39.48 \\ 
+		Uni-LSTM-backward-masked& - 		& -				& - \\ 
+		\bottomrule
+	\end{tabular}
+	\vspace{3mm}
+	\caption{Entity Detection performance comparison between original and masked OntoNotes 5 English Dataset Test set.}
+	\label{tab:mask}
+\end{table}
+
+We can see that after masking the entities to be ``[$<$UNK$>$]'', the recall drop dramatically. This means LSTM fails to detect entities without the embedding information from the word itself. This give us the idea that most effectiveness of sequence tagging may come from the word embedding. So we further analysis the embedding using MLP models.
 
 \begin{figure}[t]
 	\centering
@@ -405,22 +417,19 @@ In question 1, we have empirically shown that the LSTM model could perform signi
 	\caption{Bi-LSTM Embedding with non-entity word based on the prediction of MLP model}
 	\label{fig:bi_lstm_mlp_negative}
 \end{subfigure}
+\caption{T-SNE for Word Embedding}
+\label{fig:embedding}
 \end{figure}
 
-We can observe that with local model such as MLP(bi) or MLP(uni), the model can also achieve reasonable performance. More than 60 F1 score can be obtained by simple local model. In this subsection, we are trying to investigate the reason behind this, mainly focusing on the embedding level. 
+We can observe that with local model such as MLP(bi) or MLP(uni), the model can also achieve reasonable performance. More than 60 F1 score can be obtained by simple local model. %In this subsection, we are trying to investigate the reason behind this, mainly focusing on the embedding level. 
 
-We firstly classify the words into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In the following figures, red dots denote entity words and grey dots denote non-entity words. 
+We firstly classify the words into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In \ref{fig:embedding}, red dots denote entity words and grey dots denote non-entity words. 
 
 We decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. With these two figures, we can observe that the GloVe embeddings indeed contain some entity-related information, because we can observe that the entity-word distribution is not same as non-entity-word distribution. But we still can find that most of the entity word and non-entity word are mix in the middle of the figures. 
 
 We further decompose the embeddings learned from the BiLSTM model, as shown in Figure~\ref{fig:bi_lstm_gold_positive} and Figure~\ref{fig:bi_lstm_gold_negative}. Compared with the figures from GloVe embeddings, we can observe that the entity-words are clustered tighter in Bi-LSTM based embeddings. This phenomenon indicates that the training process optimize the embeddings representation.
 
 
-
-
-% We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
-
-%Describe the datasets you tested on; justify their relevance
 %Compare empirically the techniques for complexity, performance, ease of use, etc.
 %Analyze and compare (empirically or theoretically) your new approach to existing approaches
 %What is the best technique, in terms of what?
