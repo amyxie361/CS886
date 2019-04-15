@@ -134,7 +134,9 @@ Formally, we represent a sentence as a list of tokens $T = [t_1, t_2, ... , t_n]
 %\red{We focus on the named entity recognition task. This is to tag each word its category in terms of entity, that is does the word refer to a person, a location, an organization, etc. Usually the system needs to tag for each token their category alone with whether it is the start, inner or end part of this entity. To make future analysis easier, we simplify the task to be a binary classification task. That is to say, we classify each token to be either entity or non-entity.} 
 %states twice ?
 
+
 We implement several models to compare the contribution of both embedding information and contextual information to the final prediction. 
+
 
 \subsection{Uni-directional LSTM}
 
@@ -185,9 +187,9 @@ The input of the $i$ th layer is represented as $x_i$, then the $i$ th layer is 
 
 We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward uni-directional LSTM and the bi-directional LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f_m(e_t))$.% explain more?
 
-\section{Decomposition}
+\subsection{Decomposition}
 
-\subsection{Uni-LSTM}
+\textbf{Uni-LSTM}
 
 We now show that we can decompose the numerator of $p_{t, c}$ into a product of factors, and interpret those factors as the contribution of individual words of the predicted probability of class $c$ for uni-LSTM. Also taking the forward direction as an example, define 
 \begin{equation}\label{eq:uni-beta} 
@@ -201,7 +203,7 @@ As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word
 This is a direct extension of [TODO]'s work, in which we expand their method to suit sequence tagging tasks.
 The backward direction will just be the same.
 
-\subsection{Bi-LSTM}
+\textbf{Bi-LSTM}
 
 For the bi-directional LSTM decomposition, we can simply de-concatenate the gate states and compute the contribution of each direction as in the uni-direction version. Then each token's probability distribution can be taken as a combination of both direction. That is to say, the probability can be interpreted as follow:
 \begin{align}\label{eq:bi-beta} 
@@ -229,7 +231,7 @@ Then we have:
 = \prod_{j=1}^t &\beta_{t, c, j}^{fw} \prod_{j=t}^n \beta_{t, c, j}^{bw}.
 \end{align}
 
-\subsection{MLP}
+\textbf{MLP}
 
 For MLP model, the probability distribution of each token only rely on it's own embedding and the weight vector in the network. So the contribution weight before softmax activation function can be written as: 
 \begin{equation}
@@ -282,9 +284,11 @@ We demonstrate our results regarding different questions we are trying to answer
 		\toprule
 		\textbf{Model}         & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\ \midrule
 		Bi-LSTM &  84.82 & 83.60  & 84.20 \\
-		Uni-LSTM & 72.47 & 73.88 & 73.17 \\
+		Uni-LSTM-forward & 72.47 & 73.88 & 73.17 \\
+		Uni-LSTM-backward & 80.31 & 80.28 & 80.29 \\ \midrule
 		MLP(bi) & 54.97 & 75.65 & 63.67 \\ 
-		MLP(uni) & 60.80 & 61.75 &  61.27 \\ 
+		MLP(uni-forward) & 60.80 & 61.75 &  61.27 \\ 
+		MLP(uni-backward) & 54.61 & 75.99 & 63.55 \\ 
 		\bottomrule
 	\end{tabular}
 	\vspace{3mm}
@@ -295,12 +299,14 @@ We demonstrate our results regarding different questions we are trying to answer
 
 \noindent \textbf{Bi-LSTM v.s. Uni-LSTM}
 
-The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, as shown in \ref{tab:bi-uni}. We categorize the cases from three dimensions. First, whether the token is an entity or an ordinary word according to golden label, and whether the token is in the vocabulary. The third dimension is from hand annotation. We sampled 50 cases from 1393 cases and annotate to further categorize the error source. We give each an example for each case and the target tokens are in bold form.
 
+The experiment results are shown in Table~\ref{res:ner}. Compare the effectiveness of Bi-LSTM model and Uni-LSTM model, we can observe that Bi-LSTM has better F1 score~(+11.03) than the Uni-LSTM model, which is a large gap in Entity Detection task. To order to quantify what kind of error does Uni-LSTM make, we conduct further error analysis. We select those examples that Bi-LSTM makes correct predictions and but Uni-LSTM fails, and further categorize them into \red{n} types, as shown in \ref{}.
+%{'EOETrue': 823, 'EOEFalse': 214, 'OEOTrue': 239, 'OEOFalse': 117}
 \begin{table}[t]
 \centering\centering\resizebox{\columnwidth}{!}{
 \begin{tabular}{lllp{8cm}}
 \hline\hline
+
 Category			&Total \# case 	& Sample \# case	&examples \\
 Ordinary-Vocab		& 239		&14		& For \textbf{more} information check out : www.taconet.com.tw/cstudio/\\
 Ordinary-OOV		& 117		&10		& Dr. Konan Peck , an assistant research fellow at Academia Sinica 's Institute of Biomedical Sciences -LRB- IBMS -RRB- , says that \textbf{biochips} need to be made more widely available as a molecular biology research tool .\\
@@ -311,6 +317,7 @@ Form				& -			& 2		& \textbf{Thick} fog , rain and high winds are limiting visib
 OOV				& -			& 11		& Even if you wanted to , you wo n't be reading \textbf{Jermaine} 's account now.\\
 Nearby 			& - 			& 51		&Ah , yes , something called \textbf{a} Star Chamber .\\
 Others			& - 			& 9		&And although Pennsylvania and Massachusetts suffered slight declines \textbf{earlier} in the decade , they are growing again .\\
+
 \hline
 \end{tabular}}
 \label{tab:bi-uni}
@@ -321,9 +328,8 @@ In table \ref{tab:bi-uni}, Ordinary means the target token is a non-entity in go
 
 \begin{itemize}
 	\item Form: in some cases, words will be in different form. For example, the first character of the first word will be capitalized. Since Glove is a case sensitive embedding, the two form will have different embedding vectors, which will lead to difference in inference phrase. 
-	\item OOV: some words are not in the Glove vocabulary
+	\item OOV: some words are not in the Glove vocabulary TODO
 \end{itemize}
-
 
 \noindent \textbf{Bi-LSTM v.s. MLP(bi)}
 
@@ -350,8 +356,6 @@ Others		&-	& 16		& It achieved a total volume of 4 billion US dollars of goods g
 \end{table}
 
 
-
-
 \noindent \textbf{Uni-LSTM v.s. MLP(uni)}
 
 
@@ -370,53 +374,48 @@ In question 1, we have empirically shown that the LSTM model could perform signi
 
 \begin{figure}[t]
 	\centering
-	\begin{subfigure}{0.5\textwidth}
+	\begin{subfigure}{0.24\textwidth}
 		\includegraphics[width=\linewidth]{glove_embedding_positive.pdf}
 		\caption{Glove Embedding with entity word}
 		\label{fig:glove_positive}
 	\end{subfigure}\hfil 
-	\begin{subfigure}{0.5\textwidth}
+	\begin{subfigure}{0.24\textwidth}
 		\includegraphics[width=\linewidth]{glove_embedding_negative.pdf}
 		\caption{Glove Embedding with non-entity word}
 		\label{fig:glove_negative}
-	\end{subfigure}
+	\end{subfigure}\hfil
+	\begin{subfigure}{0.24\textwidth}
+	\includegraphics[width=\linewidth]{bi_lstm_gold_positive.pdf}
+	\caption{Bi-LSTM Embedding with entity word}
+	\label{fig:bi_lstm_gold_positive}
+\end{subfigure}\hfil 
+\begin{subfigure}{0.24\textwidth}
+	\includegraphics[width=\linewidth]{bi_lstm_gold_negative.pdf}
+	\caption{Bi-LSTM Embedding with non-entity word}
+	\label{fig:bi_lstm_gold_negative}
+\end{subfigure}
+\bigskip
+\begin{subfigure}{0.24\textwidth}
+	\includegraphics[width=\linewidth]{bi_lstm_mlp_positive.pdf}
+	\caption{Bi-LSTM Embedding with entity word based on the prediction of MLP model}
+	\label{fig:bi_lstm_mlp_positive}
+\end{subfigure}\hfil 
+\begin{subfigure}{0.24\textwidth}
+	\includegraphics[width=\linewidth]{bi_lstm_mlp_negative.pdf}
+	\caption{Bi-LSTM Embedding with non-entity word based on the prediction of MLP model}
+	\label{fig:bi_lstm_mlp_negative}
+\end{subfigure}
 \end{figure}
 
 We can observe that with local model such as MLP(bi) or MLP(uni), the model can also achieve reasonable performance. More than 60 F1 score can be obtained by simple local model. In this subsection, we are trying to investigate the reason behind this, mainly focusing on the embedding level. 
 
-We firstly classify the word into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In the following figures, red dots denote entity words and grey dots denote non-entity words. 
+We firstly classify the words into two categories: words belong to at least one entity~(entity word), and words nerve belong to any entity(non-entity word). We leverage the t-SNE to decompose the any embeddings into two dimensions with unit axises and visualize it. In the following figures, red dots denote entity words and grey dots denote non-entity words. 
 
-We decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. We can observe that most of the entity word and non-entity word are mix in the middle of the figures. 
+We decompose the original GloVe embedding, as shown in Figure~\ref{fig:glove_positive} and Figure~\ref{fig:glove_negative}. With these two figures, we can observe that the GloVe embeddings indeed contain some entity-related information, because we can observe that the entity-word distribution is not same as non-entity-word distribution. But we still can find that most of the entity word and non-entity word are mix in the middle of the figures. 
 
-\begin{figure}[t]
-	\centering
-	\begin{subfigure}{0.5\textwidth}
-		\includegraphics[width=\linewidth]{bi_lstm_mlp_positive.pdf}
-		\caption{Bi-LSTM Embedding with entity word based on the prediction of MLP model}
-		\label{fig:bi_lstm_mlp_positive}
-	\end{subfigure}\hfil 
-	\begin{subfigure}{0.5\textwidth}
-		\includegraphics[width=\linewidth]{bi_lstm_mlp_negative.pdf}
-		\caption{Bi-LSTM Embedding with non-entity word based on the prediction of MLP model}
-		\label{fig:bi_lstm_mlp_negative}
-	\end{subfigure}
-\end{figure}
+We further decompose the embeddings learned from the BiLSTM model, as shown in Figure~\ref{fig:bi_lstm_gold_positive} and Figure~\ref{fig:bi_lstm_gold_negative}. Compared with the figures from GloVe embeddings, we can observe that the entity-words are clustered tighter in Bi-LSTM based embeddings. This phenomenon indicates that the training process optimize the embeddings representation.
 
-\begin{figure}[t]
-	\centering
-	\begin{subfigure}{0.5\textwidth}
-		\includegraphics[width=\linewidth]{bi_lstm_gold_positive.pdf}
-		\caption{Bi-LSTM Embedding with entity word}
-		\label{fig:bi_lstm_gold_positive}
-	\end{subfigure}\hfil 
-	\begin{subfigure}{0.5\textwidth}
-		\includegraphics[width=\linewidth]{bi_lstm_gold_negative.pdf}
-		\caption{Bi-LSTM Embedding with non-entity word}
-		\label{fig:bi_lstm_gold_negative}
-	\end{subfigure}
-\end{figure}
 
-We further decompose 
 
 
 % We first trained a Bi-LSTM model for NER task on the CoNLL-2003 dataset (Tjong Kim Sang and De Meulder, 2003). It is a classic dataset for NER(TODO, more description). Then we applied the described method above to decompose the model. The contribution weights can be visualized as follow.
