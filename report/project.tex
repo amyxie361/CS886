@@ -388,17 +388,17 @@ In question 1, we have empirically shown that the LSTM model could perform signi
 
 \subsection{Question 3}
 
-To examine the source of effectiveness of LSTM, we conducted an experiment that randomly masks the entities in test data. To eliminate the affect of word embedding and measure the contribution from context, we mask the entities to be ``[$<$UNK$>$]''. The results can be found in \ref{tab:mask}
+\noindent \textbf{A Motivating Example} 
+
+To examine the source of effectiveness of LSTM, we conduct an experiment where the entities are randomly masked in test set. To eliminate the effect of word embedding and to measure the contribution from context, we mask the entities to ``$<$UNK$>$''. The results are shown in \ref{tab:mask}.
+
 \begin{table}[t]
 	\centering
 	\begin{tabular}{l@{\qquad}ccc}
 		\toprule
 		\textbf{Model}		& \textbf{Precision}	& \textbf{Recall}	& \textbf{F1} \\ \midrule
-		Bi-LSTM 		 	&  84.82 			& 83.60  			& 84.20 \\
-		Uni-LSTM-forward 	& 72.47 			& 73.88 			& 73.17 \\
-		Uni-LSTM-backward & 80.31 			& 80.28 			& 80.29 \\ \midrule
-		Bi-LSTM-masked 	& 64.53 			& 33.74			& 44.31 \\ 
-		Uni-LSTM-forward-masked & 67.01 		& 27.98 			& 39.48 \\ 
+		Bi-LSTM-masked 	& 64.53~(-20.29) 			& 33.74~(49.86)			& 44.31~(-39.89) \\ 
+		Uni-LSTM-forward-masked & 67.01~(-5.46) 		& 27.98~(-45.90) 			& 39.48~(-33.69) \\ 
 		Uni-LSTM-backward-masked& - 		& -				& - \\ 
 		\bottomrule
 	\end{tabular}
@@ -407,7 +407,9 @@ To examine the source of effectiveness of LSTM, we conducted an experiment that 
 	\label{tab:mask}
 \end{table}
 
-We can see that after masking the entities to be ``[$<$UNK$>$]'', the recall drop dramatically. This means LSTM fails to detect entities without the embedding information from the word itself. This give us the idea that most effectiveness of sequence tagging may come from the word embedding. So we further analysis the embedding using MLP models.
+We can find that the recall drop dramatically after masking the entities to ``$<$UNK$>$''. This means that LSTM fails to detect entities without the embedding information from the word itself. This give us the idea that most effectiveness of sequence tagging may come from the word embedding. So we further analysis the embedding using visualization techniques.
+
+\noindent \textbf{Analysis}
 
 \begin{figure}[t]
 	\centering
