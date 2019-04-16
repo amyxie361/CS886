@@ -173,6 +173,7 @@ The input of the $i$ th layer is represented as $x_i$, then the $i$ th layer is 
 We compared the four different embeddings: the original pre-trained embedding from Glove, the tuned embedding of forward and backward Uni-LSTM and the Bi-LSTM. The final probability will be $p_{t, c} = \text{SoftMax}(f_m(e_t))$.% explain more?
 
 \subsection{Uni-LSTM Decomposition}
+\label{uni-lstm-decom}
 
 We now show that we can decompose the numerator of $p_{t, c}$ into a product of factors, and interpret those factors as the contribution of individual words of the predicted probability of class $c$ for Uni-LSTM. Also taking the forward direction as an example, define 
 \begin{equation}\label{eq:uni-beta} 
@@ -192,6 +193,7 @@ This is a direct extension of [TODO]'s work, in which we expand their method to 
 The backward direction will just be the same.
 
 \subsection{Bi-LSTM Decomposition}
+\label{bi-lstm-decom}
 
 We also extend the decomposition for Bi-LSTM model. For Bi-LSTM, we can simply de-concatenate the gate states and compute the contribution of each direction as in the Uni-LSTM. Then each token's probability distribution can be taken as a combination of both direction. That is to say, the probability can be interpreted as follow:
 \begin{align}\label{eq:bi-beta} 
@@ -226,7 +228,7 @@ For better understanding, we break down the problem of ``What does the Bi-LSTM l
 \begin{itemize}
 	\item Does Bi-LSTM perform significantly better than Uni-LSTM and local models such as MLP? 
 	In what cases, Bi-LSTM, Uni-LSTM and local models work well or better than the other models?
-	\item Does Bi-LSTM model learn to do prediction from contextual information? How to verify and measure the difference?
+	\item How LSTMs make their prediction? How do they make errors? % Does Bi-LSTM model learn to do prediction from contextual information? How to verify and measure the difference?
 	\item Why do Uni-LSTM and local model also work in some cases? 
 \end{itemize}
 
@@ -361,9 +363,21 @@ We categorize the error sources into 4 types, as shown below.
 The counts of each categories and their examples are shown in Table~\ref{tab:bi-uni} and Table~\ref{tab:bi-mlp}. Note that one sentence might have more than one error so the sum of the counts are larger than 50.
 
 
-\subsection{LSTM learns contextual information.}
+% \subsection{LSTM learns contextual information.}
+\subsection{Question 2}
+% In question 1, we have empirically shown that the LSTM model could perform significantly better than local model, then we also want to show this in more deeper way. With LSTM decomposition, we find that the Bi-LSTM can correct several errors made by local model such as MLP and uni-LSTM. 
 
-In question 1, we have empirically shown that the LSTM model could perform significantly better than local model, then we also want to show this in more theoretically way. With LSTM decomposition, we find that the LSTM can correct several errors made by local model such as MLP. 
+As discussed in Section~\ref{uni-lstm-decom} and Section~\ref{bi-lstm-decom}, for the prediction of current token, we can decompose the LSTM to get contributions of other tokens. We show several examples here to illustrate the process.
+
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{uni-Bill.pdf}
+	\label{fig:Bill}
+\end{figure}
+
+As shown in Figure~\ref{}
+
 
 
 %OET  The interview did n't last long , just two hours and it was over .
