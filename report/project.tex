@@ -224,18 +224,16 @@ For better understanding, we break down the problem of ``What does the Bi-LSTM l
 
 \begin{itemize}
 	\item Do Bi-LSTM perform significantly better than Uni-LSTM and local models such as MLP? 
-	In what cases, Bi-LSTM, Uni-LSTM and local models work well or better than the other models?
-	\item How LSTMs make their prediction? How do they make errors? % Does Bi-LSTM model learn to do prediction from contextual information? How to verify and measure the difference?
-	\item Why do Uni-LSTM and local model also work in some cases? 
+	In what cases, each model works well?
+	\item Why do Uni-LSTM and local model work in some cases? 
+	\item How LSTMs make their prediction? How do they make errors? Why do they have better performance?% Does Bi-LSTM model learn to do prediction from contextual information? How to verify and measure the difference? 
 \end{itemize}
 
-To answer first question, we conduct the experiments with Bi-LSTM, Uni-LSTM model. The embedding is initialized with GloVe pretraining embeddings~\cite{pennington2014glove}. To investigate what kind of information gain provided by the LSTM, we also conduct experiments with MLP. We adopt the fine-tuned embeddings in LSTM and fix them during the training of MLP model. This is known as probing technique[TODO cite]. 
+To answer first question, we conduct the experiments with Bi-LSTM, Uni-LSTM model. The embedding is initialized with GloVe pretrained embeddings~\cite{pennington2014glove}. To investigate what kind of information gain provided by the LSTM, we also conduct experiments with MLP. We adopt the fine-tuned embeddings in LSTM and fix them during the training of MLP model. This is known as probing technique. 
 
-To answer the second question, we use the LSTM decomposition technique to further investigate the contribution distribution for the token level prediction. The decomposition is conducted for Bi-LSTM and Uni-LSTM. 
+To answer the second question, we leverage visualization techniques such as t-SNE~\cite{maaten2008visualizing}, to visualize embedding vectors. T-SNE is a technique that can visualizes high-dimensional data by giving each datapoint a location in a two or three-dimensional map. The main idea is to first use mixture models to estimate the distribution of points and then minimize the KL-divergence between point distributions before and after the mapping.
 
-To answer the third question, we leverage visualization techniques such as t-SNE~\cite{maaten2008visualizing}, to visualize the hidden vectors together with initial embedding vectors. T-SNE is a technique that can visualizes high-dimensional data by giving each datapoint a location in a two or three-dimensional map. The main idea is to first using mixture models to estimate the distribution of points and then minimize the KL-divergence between point distribution before and after the mapping.
-
-%formulate your problem precisely (mathematically), present the technical challenges (if any), discuss the tools or datasets that you will build on, state your goals, and come up with a plan for evaluation.
+To answer the third question, we use the LSTM decomposition technique to further investigate the contribution distribution for the token level prediction. The decomposition is conducted for Bi-LSTM and Uni-LSTM. 
 
 \section{Experimental Setup}
 
@@ -243,7 +241,7 @@ To answer the third question, we leverage visualization techniques such as t-SNE
 
 \subsection{Dataset} 
 
-Our experiments are conducted based on OntoNotes 5 English dataset~\cite{weischedel2012ontonotes}, focusing on Entity Detection task. The Entity Detection task is usually formulated as a sequence labeling task: labels are assigned to each token. Different tagging scheme can be adopted, such as \textit{BIO}, \textit{BIOES}, etc. For simplification, in this work, we use \textit{IO} scheme: if the token is a part of entity, it will be annotated as \textbf{I}; otherwise, it will be annotated as \textbf{O}. One special case that this tagging scheme can not handle is that two entity appear consecutively in one sentence, because there is not boundary label such \textbf{B}~(begin of entity). So in our experiments, we remove the sentences with consecutive entities for further experiments. The performance is evaluated by Precision, Recall and F1 scores.
+Our experiments are conducted on OntoNotes 5 English dataset~\cite{weischedel2012ontonotes}, focusing on Entity Detection task. The Entity Detection task is usually formulated as a sequence labeling task: labels are assigned to each token. Different tagging scheme can be adopted, such as \textit{BIO}, \textit{BIOES}, etc. For simplification, in this work, we use \textit{IO} scheme: if the token is a part of entity, it will be annotated as \textbf{I}; otherwise, it will be annotated as \textbf{O}. One special case that this tagging scheme can not handle is that two entity appear consecutively in one sentence, because there is not boundary label such \textbf{B}~(begin of entity). So in our experiments, we remove the sentences with consecutive entities for further experiments. The performance is evaluated by Precision, Recall and F1 scores.
 
 \subsection{Hyper-parameters}
 
