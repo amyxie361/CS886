@@ -410,6 +410,7 @@ As shown in Figure~\ref{}
 
 To examine the source of effectiveness of LSTM, we conduct an experiment where the entities are randomly masked in test set. To eliminate the effect of word embedding and to measure the contribution from context, we mask the entities to ``$<$UNK$>$''. The results are shown in \ref{tab:mask}.
 
+
 \begin{table}[t]
 	\centering
 	\begin{tabular}{l@{\qquad}ccc}
@@ -417,7 +418,7 @@ To examine the source of effectiveness of LSTM, we conduct an experiment where t
 		\textbf{Model}		& \textbf{Precision}	& \textbf{Recall}	& \textbf{F1} \\ \midrule
 		Bi-LSTM-masked 	& 64.53~(-20.29) 			& 33.74~(49.86)			& 44.31~(-39.89) \\ 
 		Uni-LSTM-forward-masked & 67.01~(-5.46) 		& 27.98~(-45.90) 			& 39.48~(-33.69) \\ 
-		Uni-LSTM-backward-masked& - 		& -				& - \\ 
+		Uni-LSTM-backward-masked& 65.54~(-14.77) 		& 25.90~(-54.38)			& 37.12~(-43.17) \\ 
 		\bottomrule
 	\end{tabular}
 	\vspace{3mm}
