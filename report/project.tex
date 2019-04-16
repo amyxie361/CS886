@@ -49,21 +49,15 @@
 
 \newcommand{\red}[1]{\textcolor{red}{#1}}
 
-\title{What does LSTM learn? Contextual Decomposition for Rationalizing LSTM Predictions}
+\title{How does LSTM make Prediction? Contextual Decomposition for Rationalizing LSTM Predictions}
 
-\author{
-	Yuqing Xie \\
-	School of Computer Science\\
-	University of Waterloo\\
-	Waterloo, ON, N2L 3G1 \\
-	\texttt{yuqing.xie@uwaterloo.ca} \\
-	\And
-	Peng Shi\\
-	School of Computer Science\\
-	University of Waterloo\\
-	Waterloo, ON, N2L 3G1 \\
-	\texttt{TODO@uwaterloo.ca} \\
-}
+%\author{
+%	Yuqing Xie \\
+%	University of Waterloo\\
+%	\And
+%	Peng Shi\\
+%	University of Waterloo\\
+%}
 
 \begin{document}
 \maketitle
@@ -78,22 +72,29 @@
 
 \begin{abstract}
 
-LSTM is widely used in Natural Language Processing~(NLP) area and is treated as a contextual encoder and a fundamental block of complicated models. Usually, LSTM is regarded as an black box and people contribute the effectiveness source to context learning ability. In this paper, we are trying to understand and rationalize the behaviors and predictions of LSTM. Based on Entity Detection task, by proposing a token-level contextual decomposition method, we investigate the effectiveness sources of the LSTM models. With the help embedding visualization technique, we also show that embeddings also make a major contribution towards the model effectiveness.
+LSTMs are widely used in Natural Language Processing~(NLP) area and treated as contextual encoders, which are fundamental blocks of complicated models. Usually, LSTMs are regarded as black boxes and people contribute their effectiveness source to their context learning ability. In this paper, we are trying to understand the behaviors and rationalize the predictions of LSTMs. Based on Entity Detection task, we propose a token-level contextual decomposition method, to investigate the effectiveness sources of the LSTM models. With the help embedding visualization technique, we also show that embeddings also make a major contribution towards the model effectiveness.
 
 \end{abstract}
 
 \section{Introduction}
 
-Recurrent neural networks(RNN) are now the standard method to deal with natural language. Models using long-short-term-memory(LSTM) perform extremely well on varieties of natural language tasks, ranging from machine translation, question answering to sentence classification and sentence tagging. However, unlike Convolution neural networks for vision tasks, the mechanism behind RNN is less explored and hard to visualize. Without clear understanding of the sequential models, improvements can be hard to made and further improvement will be less directed. 
+Long-Short-Term-Memory(LSTM) models are now the standard components to deal with natural language, achieving state-of-the-art performance on varieties of natural language tasks, ranging from machine translation~\cite{sutskever2014sequence}, question answering~\cite{tan2015lstm} to sentence classification~\cite{liu2016recurrent} and sentence tagging~\cite{chiu2016named}. However, unlike Convolution neural networks for vision tasks, the mechanism behind LSTM is less explored and hard to explain with visualization. Without clear understanding of the sequential models, further improvements are hard to make.
 
-Several previous work has been done to try to visualize LSTM. However, no significant findings has been made to help understand the contributions of each words. 
-TODO:related works summary.
+ Recently, some efforts have been made to try to understand LSTMs. \citet{strobelt2018lstmvis} and \citet{karpathy2015visualizing} analyzed the movement of the raw gate activations over a sequence. However, their cell co-ordinates based methods are usually hard to interpret and it is hard explain which inputs are important for specific outputs. On another line of research, derivative-based methods~\cite{alikaniotis2016automatic, denil2014extraction} are explored: by looking at the norm of the derivative of the loss function with respect to the embedding parameters for that word, they tried understand the model behavior in document classification. However, no exploration was made for token-level prediction tasks such as Entity Detection. 
+
+Inspired by~\citet{murdoch2017automatic}, we propose a novel method of decomposing LSTM models on token level, to further understand their behaviors and predictions. The main difference between our work and \citet{murdoch2017automatic} is that they decompose the uni-directional LSTM on sentence level prediction, while we decompose the uni-directional LSTM and bi-directional LSTM on token level prediction. With our decomposition method, we can understand how do the tokens in a sentence influence the prediction of a specific token. This idea is quite similar to the attention mechanism in NLP~\cite{bahdanau2014neural}, which is usually used for explaining the predictions of the neural models. However, attention components will introduce extra parameters, and the original models are changed. Our decomposition method can be applied to any trained LSTM networks without any modification. 
+
+With further experiments on Entity Detection task, we show that though Bi-LSTM indeed bring extra performance gains compared against uni-directional LSTMs or local models such as MLPs, word embedding still play an important role in predicting the results correctly. We also show several types of errors that the models make and analyze them with the help of the novel decomposition method. 
+ 
+ 
+%However, no significant findings have been made to help understand the predictions on the token level. 
+% TODO:related works summary.
 %Why can't any of the existing techniques effectively tackle this problem?
 
-Since few theory work has been done to successfully dig deep into sequential models and apply the findings to practice, we proposed a novel method of decomposing Bi-LSTM models and visualize them for further model improvement. We decomposed trained Bi-LSTM models for sequence tagging tasks to understand the contribution of each components in the sentence. %We also improved the final model according to this finding. 
+% Since few theory work has been done to successfully dig deep into sequential models and apply the findings to practice, we proposed a novel method of decomposing Bi-LSTM models and visualize them for further model improvement. We decomposed trained Bi-LSTM models for sequence tagging tasks to understand the contribution of each components in the sentence. %We also improved the final model according to this finding. 
 % take cross-view learning as an example in this project. We will analyze and improve cross-view learning using Bayesian ensemble.
 
-First thought to investigate the LSTM is to watch on the contribution of each word toward the output. A clear way to do this is to apply the attention mechanism. However, what we aim to do here is not to improve the model by introducing extra weights but to just examine the existing model. We follow Jame’s to decomposition[TODO]. The main idea is to decompose the output gates in LSTM and convert them in to the contribution weights of words towards outputs. Their work focus on the sentence classification tasks -- sentiment classification. This is relative simple task and needs less understanding of the sentence structure. Contributions of each word is relatively clear according to their meaning, which can be easily represented by current word embeddings. We follow their method  made modification of their models since we focus on sequence tagging tasks and examined Bi-LSTM.
+% First thought to investigate the LSTM is to watch on the contribution of each word toward the output. A clear way to do this is to apply the attention mechanism. However, what we aim to do here is not to improve the model by introducing extra weights but to just examine the existing model. We follow Jame’s to decomposition[TODO]. The main idea is to decompose the output gates in LSTM and convert them in to the contribution weights of words towards outputs. Their work focus on the sentence classification tasks -- sentiment classification. This is relative simple task and needs less understanding of the sentence structure. Contributions of each word is relatively clear according to their meaning, which can be easily represented by current word embeddings. We follow their method  made modification of their models since we focus on sequence tagging tasks and examined Bi-LSTM.
 
 %Possible difficulties - main contribution
 %How to quantify the observations and summarize it into prior knowledge.
@@ -105,16 +106,16 @@ First thought to investigate the LSTM is to watch on the contribution of each wo
 %So, here comes our problem. We would like to Investigate the source of the effectiveness of cross-view training method. We will try to answer the following questions: * What does LSTM with CVT learn from the unlabeled data compared with traditional LSTM. * What is learned for different views in CVT.  And further, we wish to improve the cross-view training method based on our investigation.
 %What properties did you analyze/prove about this problem or technique?
 
-\section{Related Works}
+% \section{Related Works}
 
-There are mainly two lines of related work on neural network interpretability.
+% There are mainly two lines of related work on neural network interpretability.
 
 %TODO rewrite and summary.
 
-First, Hendrik et al. (2016) and Karpathy et al. (2016) analyze the movement of the raw gate activations over a sequence.
-Karpathy et al. (2016) is able to identify co-ordinates of $c_t$ that correspond to semantically meaningful attributes such as whether the text is in quotes and how far along the sentence a word is. However, most of the cell co-ordinates are harder to interpret, and in particular, it is often not obvious from their activations which inputs are important for specific outputs.
+% First, Hendrik et al. (2016) and Karpathy et al. (2016) analyze the movement of the raw gate activations over a sequence.
+% Karpathy et al. (2016) is able to identify co-ordinates of $c_t$ that correspond to semantically meaningful attributes such as whether the text is in quotes and how far along the sentence a word is. However, most of the cell co-ordinates are harder to interpret, and in particular, it is often not obvious from their activations which inputs are important for specific outputs.
 
-Another approach that has emerged in the literature Alikaniotis et al. (2016) Denil et al. (2015) Bansal et al. (2016) is for each word in the document, looking at the norm of the derivative of the loss function with respect to the embedding parameters for that word. This bridges the gap between high-dimensional cell state and low-dimensional outputs. These techniques are general- they are applicable to visualizing the importance of sets of input coordinates to output coordinates of any differentiable function. In this work, we describe techniques that are designed around the structure of LSTM’s, and show that they can give better results in that setting.
+% Another approach that has emerged in the literature Alikaniotis et al. (2016) Denil et al. (2015) Bansal et al. (2016) is for each word in the document, looking at the norm of the derivative of the loss function with respect to the embedding parameters for that word. This bridges the gap between high-dimensional cell state and low-dimensional outputs. These techniques are general- they are applicable to visualizing the importance of sets of input coordinates to output coordinates of any differentiable function. In this work, we describe techniques that are designed around the structure of LSTM’s, and show that they can give better results in that setting.
 
 %Related work - Sequence task ensemble
 %For sequential task ensemble there also exist several kinds of methods
