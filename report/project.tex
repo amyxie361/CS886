@@ -61,14 +61,8 @@
 
 \begin{document}
 \maketitle
-% expect the report to be less than \textbf{8 pages} (references excluded).
 
-%TODO
-% introduction refine
-% related work, conclusion
-% question 2 find examples to draw plot
-% mask uni-bw data
-% question 2 pattern extraction experiment 
+% conclusion
 
 \begin{abstract}
 
@@ -242,9 +236,6 @@ To answer the third question, we use the LSTM decomposition technique to further
 \subsection{Dataset} 
 
 Our experiments are conducted on OntoNotes 5 English dataset~\cite{weischedel2012ontonotes}, focusing on Entity Detection task. The Entity Detection task is usually formulated as a sequence labeling task: labels are assigned to each token. Different tagging scheme can be adopted, such as \textit{BIO}, \textit{BIOES}, etc. For simplification, in this work, we use \textit{IO} scheme: if the token is a part of entity, it will be annotated as \textbf{I}; otherwise, it will be annotated as \textbf{O}. One special case that this tagging scheme can not handle is that two entity appear consecutively in one sentence, because there is not boundary label such \textbf{B}~(begin of entity). So in our experiments, we remove the sentences with consecutive entities for further experiments. The performance is evaluated by Precision, Recall and F1 scores.
-
-\subsection{Hyper-parameters}
-
 
 \section{Results}
 
@@ -431,9 +422,9 @@ Based on the decomposition of learned Bi-LSTM embeddings, we assign each dot wit
 
 \noindent \textbf{Decomposition}
 
-As discussed in Section~\ref{uni-lstm-decom} and Section~\ref{bi-lstm-decom}, we can decompose the LSTM to get contributions from other tokens to current token's prediction. We show several examples here to illustrate the process. We take $\log$ to $\beta_{t,j,c}$ for better visualization.
+As discussed in Section~\ref{uni-lstm-decom} and Section~\ref{bi-lstm-decom}, we can decompose the LSTM to get contributions of other tokens to current token's prediction. We show several examples here to illustrate the process. We take $\log$ to $\beta_{t,j,c}$ for better visualization.
 
-The first example is the contribution of each word to the word ``\textbf{Bill}'' in sentence \textit{``Let me conclude with comments by \textbf{Bill} the editor of Weekly Standard''}. It is an entity in under this case. 
+The first example is the contribution to ``Bill'' in \textit{``Let me conclude with comments by \textbf{Bill} the editor of Weekly Standard''}. ``Bill'' is an entity under this case. 
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=\linewidth]{uni-Bill1.pdf}
@@ -441,11 +432,11 @@ The first example is the contribution of each word to the word ``\textbf{Bill}''
 	\label{fig:Bill}
 \end{figure}
 
-The solid lines represents the forward model's contribution while the dotted line represents the backward model's contribution.  Red lines represents the contribution to predict the target to be an entity while blue lines represents the contribution to predict the target to be a non-entity. We also add level lines to indicate the logits, which equal to $b_{:c} + \sum_{j=0}^{i} \log \beta_{i, j, c} $ for each class $c$.
+In Figure~\ref{fig:Bill}, the solid lines represents the forward model's contribution while the dotted line represents the backward model's contribution.  Red lines represents the contribution to predict the target to be an entity while blue lines represents the contribution to predict the target to be a non-entity. We also add level lines to indicate the logits, which equal to $b_{:c} + \sum_{j=0}^{i} \log \beta_{i, j, c} $ for each class $c$.
 
-As we can see from Figure~\ref{fig:Bill}, the contribution to two different classes are nearly symmetric. This makes sense because this is a binary-classification problem. Then we can find the main contribution to label \textbf{Bill} as an entity is from the word itself. The reason is also clear: ``Bill'' looks like a person's name because it's capitalized, so the entity information is already encoded in the word embedding vector. 
+As we can see from Figure~\ref{fig:Bill}, the contribution to two different classes are nearly symmetric. This makes sense because this is a binary-classification problem. Then we can find the main contribution to labeling ``Bill'' as an entity is from the word itself. The reason is also clear: ``Bill'' looks like a person's name because it's capitalized, so the entity information is already encoded in the word embedding vector. 
 
-To eliminate the contribution from the word embedding, we change ``Bill'' in to ``bill''. In this case, we human can still recognize it as a person's name but just mis-capitalizing. In this case, the word ``bill'' is usually a common word represents non-entity so the embedding information will no longer tell the model that it is an entity.
+To eliminate the contribution from the word embedding, we change ``Bill'' in to ``bill''. In this second example, we human can still recognize it as a person's name. In this case, the word ``bill'' is usually a common word represents non-entity, so the embedding information will no longer contributes to entity prediction, and may even mislead the model to a wrong prediction. Now, after the changing, we can see that the contribution from ``bill'' itself has decreased as shown in Figure~\ref{fig:bill}. In this case, the Uni-LSTM predict ``bill'' as a non-entity. 
 
 \begin{figure}[t]
 	\centering
@@ -454,9 +445,8 @@ To eliminate the contribution from the word embedding, we change ``Bill'' in to 
 	\label{fig:bill}
 \end{figure}
 
-Now, after the changing, we can see that the contribution from ``bill'' itself has decreased. So in this case, the Uni-LSTM mistakenly predict it as a non-entity. However, the ``bill'' is a less-entitish word, which may mislead the model to a wrong prediction. 
-
-So to truely eliminate the contribution from the word embedding and focus more on the contextual information, we substitute ``Bill'' with ``$<$UNK$>$''.
+To truly eliminate the contribution from the word embeddings and focus on the contextual information, we replace ``Bill'' with ``$<$UNK$>$''. After the replacement, an interesting thing happened. Models in two directions give different predictions: the forward model predicts the ``$<$UNK$>$'' as entity while the backward model predict the ``$<$UNK$>$'' as non-entity. You can see in Figure~\ref{unk} the main contribution to forward model entity prediction still lies in the token position. Since ``$<$UNK$>$'' is a word that can be both entity or non-entity, we conclude that the model learned contextual information from the previous tokens. That is to say, there usually are entities after the word 
+``by''. On the other hand, the backward model don't see any special pattern that will predict the token as an entity, so the non-entity pattern is also reasonable. 
 
 \begin{figure}[t]
 	\centering
@@ -465,8 +455,6 @@ So to truely eliminate the contribution from the word embedding and focus more o
 	\label{fig:unk}
 \end{figure}
 
-After the replacement, an interesting thing happened. Model in two direction give different prediction: the forward model predict it as entity while the backward model predict it as non-entity. You can see the main contribution to forward model entity prediction still lies in the token position. Since ``$<$UNK$>$'' is a word that can be both entity or non-entity, we conclude that the model learned contextual information from the previous tokens. That is to say, there usually are entities after the word 
-``by''. On the other hand, the backward model don't see any special pattern that will predict the token as an entity, so the non-entity pattern is also reasonable. 
 
 
 \section{Conclusion}
