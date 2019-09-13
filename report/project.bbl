@@ -1,0 +1,102 @@
+\begin{thebibliography}{15}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Murdoch et~al.(2018)Murdoch, Liu, and Yu]{james2018beyond}
+W.~James Murdoch, Peter~J. Liu, and Bin Yu.
+\newblock Beyond word importance: Contextual decomposition to extract
+  interactions from {LSTM}s.
+\newblock In \emph{International Conference on Learning Representations}, 2018.
+\newblock URL \url{https://openreview.net/forum?id=rkRwGg-0Z}.
+
+\bibitem[Pennington et~al.(2014)Pennington, Socher, and
+  Manning]{pennington2014glove}
+Jeffrey Pennington, Richard Socher, and Christopher Manning.
+\newblock Glove: Global vectors for word representation.
+\newblock In \emph{Proceedings of the 2014 conference on empirical methods in
+  natural language processing (EMNLP)}, pages 1532--1543, 2014.
+
+\bibitem[Maaten and Hinton(2008)]{maaten2008visualizing}
+Laurens van~der Maaten and Geoffrey Hinton.
+\newblock Visualizing data using t-sne.
+\newblock \emph{Journal of machine learning research}, 9\penalty0
+  (Nov):\penalty0 2579--2605, 2008.
+
+\bibitem[Weischedel et~al.(2012)Weischedel, Pradhan, Ramshaw, Kaufman,
+  Franchini, El-Bachouti, Xue, Palmer, Hwang, Bonial,
+  et~al.]{weischedel2012ontonotes}
+Ralph Weischedel, Sameer Pradhan, Lance Ramshaw, Jeff Kaufman, Michelle
+  Franchini, Mohammed El-Bachouti, Nianwen Xue, Martha Palmer, Jena~D Hwang,
+  Claire Bonial, et~al.
+\newblock Ontonotes release 5.0.
+\newblock 2012.
+
+\bibitem[Shalev-Shwartz and Ben-David(2014)]{SS14}
+Shai Shalev-Shwartz and Shai Ben-David.
+\newblock \emph{Understanding Machine Learning: From Theory to Algorithms}.
+\newblock Cambridge University Press, 2014.
+
+\bibitem[Strobelt et~al.(2018)Strobelt, Gehrmann, Pfister, and
+  Rush]{strobelt2018lstmvis}
+Hendrik Strobelt, Sebastian Gehrmann, Hanspeter Pfister, and Alexander~M Rush.
+\newblock Lstmvis: A tool for visual analysis of hidden state dynamics in
+  recurrent neural networks.
+\newblock \emph{IEEE transactions on visualization and computer graphics},
+  24\penalty0 (1):\penalty0 667--676, 2018.
+
+\bibitem[Karpathy et~al.(2015)Karpathy, Johnson, and
+  Fei-Fei]{karpathy2015visualizing}
+Andrej Karpathy, Justin Johnson, and Li~Fei-Fei.
+\newblock Visualizing and understanding recurrent networks.
+\newblock \emph{arXiv preprint arXiv:1506.02078}, 2015.
+
+\bibitem[Alikaniotis et~al.(2016)Alikaniotis, Yannakoudakis, and
+  Rei]{alikaniotis2016automatic}
+Dimitrios Alikaniotis, Helen Yannakoudakis, and Marek Rei.
+\newblock Automatic text scoring using neural networks.
+\newblock \emph{arXiv preprint arXiv:1606.04289}, 2016.
+
+\bibitem[Denil et~al.(2014)Denil, Demiraj, and De~Freitas]{denil2014extraction}
+Misha Denil, Alban Demiraj, and Nando De~Freitas.
+\newblock Extraction of salient sentences from labelled documents.
+\newblock \emph{arXiv preprint arXiv:1412.6815}, 2014.
+
+\bibitem[Murdoch and Szlam(2017)]{murdoch2017automatic}
+W~James Murdoch and Arthur Szlam.
+\newblock Automatic rule extraction from long short term memory networks.
+\newblock \emph{arXiv preprint arXiv:1702.02540}, 2017.
+
+\bibitem[Bahdanau et~al.(2014)Bahdanau, Cho, and Bengio]{bahdanau2014neural}
+Dzmitry Bahdanau, Kyunghyun Cho, and Yoshua Bengio.
+\newblock Neural machine translation by jointly learning to align and
+  translate.
+\newblock \emph{arXiv preprint arXiv:1409.0473}, 2014.
+
+\bibitem[Sutskever et~al.(2014)Sutskever, Vinyals, and
+  Le]{sutskever2014sequence}
+Ilya Sutskever, Oriol Vinyals, and Quoc~V Le.
+\newblock Sequence to sequence learning with neural networks.
+\newblock In \emph{Advances in neural information processing systems}, pages
+  3104--3112, 2014.
+
+\bibitem[Tan et~al.(2015)Tan, Santos, Xiang, and Zhou]{tan2015lstm}
+Ming Tan, Cicero~dos Santos, Bing Xiang, and Bowen Zhou.
+\newblock Lstm-based deep learning models for non-factoid answer selection.
+\newblock \emph{arXiv preprint arXiv:1511.04108}, 2015.
+
+\bibitem[Liu et~al.(2016)Liu, Qiu, and Huang]{liu2016recurrent}
+Pengfei Liu, Xipeng Qiu, and Xuanjing Huang.
+\newblock Recurrent neural network for text classification with multi-task
+  learning.
+\newblock \emph{arXiv preprint arXiv:1605.05101}, 2016.
+
+\bibitem[Chiu and Nichols(2016)]{chiu2016named}
+Jason~PC Chiu and Eric Nichols.
+\newblock Named entity recognition with bidirectional lstm-cnns.
+\newblock \emph{Transactions of the Association for Computational Linguistics},
+  4:\penalty0 357--370, 2016.
+
+\end{thebibliography}

@@ -175,10 +175,7 @@ so that
 
 As $\tanh(c_j) - \tanh(c_{j-1})$ can be viewed as the update resulting from word $j$, so $\beta_{t, c, j}$ can be interpreted as the multiplicative contribution to $p_{t, c}$ by word $j$. 
 
-Now, we have 
-\begin{equation}
-p_{t, c} \propto \exp( W_{:c} h_t + b_{:c}) = \exp(b_{:c})\prod_{j=1}^t \beta_{t, c, j}.
-\end{equation}
+Now, we have  $p_{t, c} \propto \exp( W_{:c} h_t + b_{:c}) = \exp(b_{:c})\prod_{j=1}^t \beta_{t, c, j}.$
 
 This is a direct extension of [TODO]'s work, in which we expand their method to suit sequence tagging tasks.
 The backward direction will just be the same.
@@ -192,18 +189,10 @@ We also extend the decomposition for Bi-LSTM model. For Bi-LSTM, we can simply d
 = \exp(&W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw})- \tanh(c_{j-1}^{fw}))) \\
 + &W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw})- \tanh(c_{j+1}^{bw})))),
 \end{align}
-Let
-\begin{equation}
-\beta_{t, c, j}^{fw} = \exp(W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw})- \tanh(c_{j-1}^{fw}))))
-\end{equation}
-and
-\begin{equation}
-\beta_{t, c, j}^{bw} = \exp(W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw})- \tanh(c_{j+1}^{bw}))))
-\end{equation}
-so that 
-\begin{equation}
-\beta_{t, c, j} = \beta_{t, c, j}^{fw} \beta_{t, c, j}^{bw}
-\end{equation}
+Let $ \beta_{t, c, j}^{fw} = \exp(W_{:c}^{fw} (o_t^{fw} \odot (\tanh(c_j^{fw})- \tanh(c_{j-1}^{fw})))) $
+and $
+\beta_{t, c, j}^{bw} = \exp(W_{:c}^{bw} (o_t^{bw} \odot (\tanh(c_j^{bw})- \tanh(c_{j+1}^{bw})))), $
+so that $ \beta_{t, c, j} = \beta_{t, c, j}^{fw} \beta_{t, c, j}^{bw}$.\\
 Then we have:
 \begin{align}
 p_{t, c} \propto \exp(&W_{:c} [h_t^{fw}, h_t^{bw}] + b_{:c}) \\
@@ -425,18 +414,28 @@ Based on the decomposition of learned Bi-LSTM embeddings, we assign each dot wit
 As discussed in Section~\ref{uni-lstm-decom} and Section~\ref{bi-lstm-decom}, we can decompose the LSTM to get contributions of other tokens to current token's prediction. We show several examples here to illustrate the process. We take $\log$ to $\beta_{t,j,c}$ for better visualization.
 
 The first example is the contribution to ``Bill'' in \textit{``Let me conclude with comments by \textbf{Bill} the editor of Weekly Standard''}. ``Bill'' is an entity under this case. 
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=\linewidth]{uni-Bill1.pdf}
-	\caption{Example 1 for LSTM decomposition contributions to ``Bill''. The x-axis represents token id $j$, and the y-axis represents $\log \beta_{t, j, c}$}
-	\label{fig:Bill}
-\end{figure}
 
 In Figure~\ref{fig:Bill}, the solid lines represents the forward model's contribution while the dotted line represents the backward model's contribution.  Red lines represents the contribution to predict the target to be an entity while blue lines represents the contribution to predict the target to be a non-entity. We also add level lines to indicate the logits, which equal to $b_{:c} + \sum_{j=0}^{i} \log \beta_{i, j, c} $ for each class $c$.
 
 As we can see from Figure~\ref{fig:Bill}, the contribution to two different classes are nearly symmetric. This makes sense because this is a binary-classification problem. Then we can find the main contribution to labeling ``Bill'' as an entity is from the word itself. The reason is also clear: ``Bill'' looks like a person's name because it's capitalized, so the entity information is already encoded in the word embedding vector. 
 
 To eliminate the contribution from the word embedding, we change ``Bill'' in to ``bill''. In this second example, we human can still recognize it as a person's name. In this case, the word ``bill'' is usually a common word represents non-entity, so the embedding information will no longer contributes to entity prediction, and may even mislead the model to a wrong prediction. Now, after the changing, we can see that the contribution from ``bill'' itself has decreased as shown in Figure~\ref{fig:bill}. In this case, the Uni-LSTM predict ``bill'' as a non-entity. 
+
+To truly eliminate the contribution from the word embeddings and focus on the contextual information, we replace ``Bill'' with ``$<$UNK$>$''. After the replacement, an interesting thing happened. Models in two directions give different predictions: the forward model predicts the ``$<$UNK$>$'' as entity while the backward model predict the ``$<$UNK$>$'' as non-entity. You can see in Figure~\ref{unk} the main contribution to forward model entity prediction still lies in the token position. Since ``$<$UNK$>$'' is a word that can be both entity or non-entity, we conclude that the model learned contextual information from the previous tokens. That is to say, there usually are entities after the word 
+``by''. On the other hand, the backward model don't see any special pattern that will predict the token as an entity, so the non-entity pattern is also reasonable. 
+
+\section{Conclusion}
+
+%Can your new technique effectively tackle the problem?
+%What future research do you recommend?
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{uni-Bill1.pdf}
+	\caption{Example 1 for LSTM decomposition contributions to ``Bill''. The x-axis represents token id $j$, and the y-axis represents $\log \beta_{t, j, c}$}
+	\label{fig:Bill}
+\end{figure}
+\nocite{*}
 
 \begin{figure}[t]
 	\centering
@@ -445,25 +444,12 @@ To eliminate the contribution from the word embedding, we change ``Bill'' in to 
 	\label{fig:bill}
 \end{figure}
 
-To truly eliminate the contribution from the word embeddings and focus on the contextual information, we replace ``Bill'' with ``$<$UNK$>$''. After the replacement, an interesting thing happened. Models in two directions give different predictions: the forward model predicts the ``$<$UNK$>$'' as entity while the backward model predict the ``$<$UNK$>$'' as non-entity. You can see in Figure~\ref{unk} the main contribution to forward model entity prediction still lies in the token position. Since ``$<$UNK$>$'' is a word that can be both entity or non-entity, we conclude that the model learned contextual information from the previous tokens. That is to say, there usually are entities after the word 
-``by''. On the other hand, the backward model don't see any special pattern that will predict the token as an entity, so the non-entity pattern is also reasonable. 
-
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=\linewidth]{uni-UNK.pdf}
 	\caption{Example 2 for LSTM decomposition contributions to ``$<$UNK$>$''. The x-axis represents token id $j$, and the y-axis represents $\log \beta_{t, j, c}$}
 	\label{fig:unk}
 \end{figure}
-
-
-
-\section{Conclusion}
-
-%Can your new technique effectively tackle the problem?
-%What future research do you recommend?
-
-\nocite{*}
-
 \bibliographystyle{unsrtnat}
 
 \bibliography{project}
